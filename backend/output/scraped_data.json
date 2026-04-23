@@ -36,7 +36,7 @@
         "article_count": 0,
         "profile_url": "https://medium.com/@Dr.Shlain"
       },
-      "scraped_at": "2026-04-23T10:08:21.806780+00:00"
+      "scraped_at": "2026-04-23T10:20:43.644424+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -101,23 +101,23 @@
       "weighted_sum": 0.6103,
       "final_score": 0.61,
       "ai_explanation": {
-        "summary": "This Medium blog scores 0.6100/1.000 (MODERATE TRUST). The primary driver is author credibility (0.7630 × 0.3 = 0.2289) due to the author's credentials and citations.",
+        "summary": "This Medium blog scores 0.6100/1.000 (MODERATE TRUST). The primary driver is author credibility (0.7630 × 0.3 = 0.2289) from Jordan L. Shlain MD's credentials.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.7630 × weight 0.3 = contribution 0.2289. This is because the author has credentials (['md']) and 6 citations found in content.",
-          "citation_count": "Scored 0.5120 × weight 0.2 = contribution 0.1024. This is because the log10(clap_count + 1) / 4.0 formula yields 0.5123, which is then rounded to 0.5120.",
+          "author_credibility": "Scored 0.7630 × weight 0.3 = contribution 0.2289. This is because Jordan L. Shlain MD has credentials ['md'] and 6 citations found in content.",
+          "citation_count": "Scored 0.5120 × weight 0.2 = contribution 0.1024. This is because the clap count is 111 and the formula is log10(111 + 1) / 4.0 = 0.5123.",
           "domain_authority": "Scored 0.5700 × weight 0.2 = contribution 0.1140. This is because the domain tier is open platform (base 0.45 + author boost).",
-          "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the content was published 2025-10-28, which is within the 0-90 days range.",
-          "medical_disclaimer": "Scored 0.2000 × weight 0.15 = contribution 0.0300. This is because the content is medical but lacks a disclaimer.",
+          "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the content was published 2025-10-28, which is within 90 days.",
+          "medical_disclaimer": "Scored 0.2000 × weight 0.15 = contribution 0.0300. This is because the content is medical but has no disclaimer.",
           "final_calculation": "(0.2289 + 0.1024 + 0.1140 + 0.1350 + 0.0300) × 1.0 = 0.6103 × 1.0 = 0.6100"
         },
         "key_drivers": [
           "author_credibility: 0.2289 (0.3 × 0.7630)",
-          "recency: 0.1350 (0.15 × 0.9000)",
-          "citation_count: 0.1024 (0.2 × 0.5120)"
+          "citation_count: 0.1024 (0.2 × 0.5120)",
+          "recency: 0.1350 (0.15 × 0.9000)"
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing citations or engagement: citation_count score 0.5120 → 0.6, change = +0.0880 × 0.2 = +0.0176 to total"
+          "Increasing followers: followers score 0.25 → 0.50, change = +0.25 × 0.3 = +0.075 to author credibility"
         ],
         "anomaly_flag": false,
         "anomaly_reason": null,
@@ -131,23 +131,23 @@
       }
     },
     "ai_explanation": {
-      "summary": "This Medium blog scores 0.6100/1.000 (MODERATE TRUST). The primary driver is author credibility (0.7630 × 0.3 = 0.2289) due to the author's credentials and citations.",
+      "summary": "This Medium blog scores 0.6100/1.000 (MODERATE TRUST). The primary driver is author credibility (0.7630 × 0.3 = 0.2289) from Jordan L. Shlain MD's credentials.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.7630 × weight 0.3 = contribution 0.2289. This is because the author has credentials (['md']) and 6 citations found in content.",
-        "citation_count": "Scored 0.5120 × weight 0.2 = contribution 0.1024. This is because the log10(clap_count + 1) / 4.0 formula yields 0.5123, which is then rounded to 0.5120.",
+        "author_credibility": "Scored 0.7630 × weight 0.3 = contribution 0.2289. This is because Jordan L. Shlain MD has credentials ['md'] and 6 citations found in content.",
+        "citation_count": "Scored 0.5120 × weight 0.2 = contribution 0.1024. This is because the clap count is 111 and the formula is log10(111 + 1) / 4.0 = 0.5123.",
         "domain_authority": "Scored 0.5700 × weight 0.2 = contribution 0.1140. This is because the domain tier is open platform (base 0.45 + author boost).",
-        "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the content was published 2025-10-28, which is within the 0-90 days range.",
-        "medical_disclaimer": "Scored 0.2000 × weight 0.15 = contribution 0.0300. This is because the content is medical but lacks a disclaimer.",
+        "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the content was published 2025-10-28, which is within 90 days.",
+        "medical_disclaimer": "Scored 0.2000 × weight 0.15 = contribution 0.0300. This is because the content is medical but has no disclaimer.",
         "final_calculation": "(0.2289 + 0.1024 + 0.1140 + 0.1350 + 0.0300) × 1.0 = 0.6103 × 1.0 = 0.6100"
       },
       "key_drivers": [
         "author_credibility: 0.2289 (0.3 × 0.7630)",
-        "recency: 0.1350 (0.15 × 0.9000)",
-        "citation_count: 0.1024 (0.2 × 0.5120)"
+        "citation_count: 0.1024 (0.2 × 0.5120)",
+        "recency: 0.1350 (0.15 × 0.9000)"
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing citations or engagement: citation_count score 0.5120 → 0.6, change = +0.0880 × 0.2 = +0.0176 to total"
+        "Increasing followers: followers score 0.25 → 0.50, change = +0.25 × 0.3 = +0.075 to author credibility"
       ],
       "anomaly_flag": false,
       "anomaly_reason": null,
@@ -192,7 +192,7 @@
         "article_count": 0,
         "profile_url": "https://medium.com/@malynnda.stewart"
       },
-      "scraped_at": "2026-04-23T10:08:31.950372+00:00"
+      "scraped_at": "2026-04-23T10:20:53.314195+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -264,11 +264,11 @@
       "ai_explanation": {
         "summary": "This Medium blog scores 0.4520/1.000 (LOW TRUST). The primary driver is author credibility (0.9040 × 0.3 = 0.2712) from the author's credentials.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.9040 × weight 0.3 = contribution 0.2712. This is because the author has credentials 'phd', 'bcpa', 'expert' which boosted the base score of 0.25.",
-          "citation_count": "Scored 0.1000 × weight 0.2 = contribution 0.0200. This is because there is no engagement data, so the base score of 0.10 was used.",
-          "domain_authority": "Scored 0.6500 × weight 0.2 = contribution 0.1300. This is because the domain tier is open platform and the author credibility boost was applied.",
-          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
-          "medical_disclaimer": "Scored 0.5000 × weight 0.15 = contribution 0.0750. This is because the content is not medical and there is no disclaimer.",
+          "author_credibility": "Scored 0.9040 × weight 0.3 = contribution 0.2712. This is because the author has credentials ['phd', 'bcpa', 'expert'].",
+          "citation_count": "Scored 0.1000 × weight 0.2 = contribution 0.0200. This is because there is no engagement data.",
+          "domain_authority": "Scored 0.6500 × weight 0.2 = contribution 0.1300. This is because the domain tier is open platform (base 0.45 + author boost).",
+          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-02-26.",
+          "medical_disclaimer": "Scored 0.5000 × weight 0.15 = contribution 0.0750. This is because the content is not medical.",
           "final_calculation": "(0.2712 + 0.0200 + 0.1300 + 0.1500 + 0.0750) × 0.7 = 0.6462 × 0.7 = 0.4520"
         },
         "key_drivers": [
@@ -278,10 +278,10 @@
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing engagement on the content: citation_count score 0.1000 → 0.5000, change = +0.4000 × 0.2 = +0.0800 to total"
+          "Increasing citation count: citation score 0.1000 → 0.5000, change = +0.4000 × 0.2 = +0.0800 to total"
         ],
         "anomaly_flag": true,
-        "anomaly_reason": "The score seems too low for a Medium blog. Typically, a Medium blog scores above 0.75.",
+        "anomaly_reason": "The score seems too low for a Medium blog with a credible author. Typically, Medium blogs with credible authors score above 0.75.",
         "verification_questions": [
           "Is the author name legitimate?",
           "Is this content original (not scraped/spun)?",
@@ -309,11 +309,11 @@
     "ai_explanation": {
       "summary": "This Medium blog scores 0.4520/1.000 (LOW TRUST). The primary driver is author credibility (0.9040 × 0.3 = 0.2712) from the author's credentials.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.9040 × weight 0.3 = contribution 0.2712. This is because the author has credentials 'phd', 'bcpa', 'expert' which boosted the base score of 0.25.",
-        "citation_count": "Scored 0.1000 × weight 0.2 = contribution 0.0200. This is because there is no engagement data, so the base score of 0.10 was used.",
-        "domain_authority": "Scored 0.6500 × weight 0.2 = contribution 0.1300. This is because the domain tier is open platform and the author credibility boost was applied.",
-        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
-        "medical_disclaimer": "Scored 0.5000 × weight 0.15 = contribution 0.0750. This is because the content is not medical and there is no disclaimer.",
+        "author_credibility": "Scored 0.9040 × weight 0.3 = contribution 0.2712. This is because the author has credentials ['phd', 'bcpa', 'expert'].",
+        "citation_count": "Scored 0.1000 × weight 0.2 = contribution 0.0200. This is because there is no engagement data.",
+        "domain_authority": "Scored 0.6500 × weight 0.2 = contribution 0.1300. This is because the domain tier is open platform (base 0.45 + author boost).",
+        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-02-26.",
+        "medical_disclaimer": "Scored 0.5000 × weight 0.15 = contribution 0.0750. This is because the content is not medical.",
         "final_calculation": "(0.2712 + 0.0200 + 0.1300 + 0.1500 + 0.0750) × 0.7 = 0.6462 × 0.7 = 0.4520"
       },
       "key_drivers": [
@@ -323,10 +323,10 @@
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing engagement on the content: citation_count score 0.1000 → 0.5000, change = +0.4000 × 0.2 = +0.0800 to total"
+        "Increasing citation count: citation score 0.1000 → 0.5000, change = +0.4000 × 0.2 = +0.0800 to total"
       ],
       "anomaly_flag": true,
-      "anomaly_reason": "The score seems too low for a Medium blog. Typically, a Medium blog scores above 0.75.",
+      "anomaly_reason": "The score seems too low for a Medium blog with a credible author. Typically, Medium blogs with credible authors score above 0.75.",
       "verification_questions": [
         "Is the author name legitimate?",
         "Is this content original (not scraped/spun)?",
@@ -395,7 +395,7 @@
           "Marc B. Garnick, MD"
         ]
       },
-      "scraped_at": "2026-04-23T10:08:45.468994+00:00"
+      "scraped_at": "2026-04-23T10:21:02.453464+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -460,13 +460,13 @@
       "weighted_sum": 0.8345,
       "final_score": 0.668,
       "ai_explanation": {
-        "summary": "This health.harvard.edu blog scores 0.668/1.000 (MODERATE TRUST). The primary driver is author credibility (0.9200 × 0.3 = 0.2760) from institutional tier credentials.",
+        "summary": "This health.harvard.edu blog scores 0.6680/1.000 (MODERATE TRUST). The primary driver is author credibility (0.9200 × 0.3 = 0.2760) from institutional tier credentials.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.9200 × weight 0.3 = contribution 0.2760. This is because C.W. Schmidt has institutional tier credentials ['MD'].",
-          "citation_count": "Scored 0.6000 × weight 0.2 = contribution 0.1200. This is because the domain tier is institutional and citation count is neutral 0.60.",
+          "author_credibility": "Scored 0.9200 × weight 0.3 = contribution 0.2760. This is because the author has institutional tier credentials (['MD']).",
+          "citation_count": "Scored 0.6000 × weight 0.2 = contribution 0.1200. This is because the domain tier is institutional (neutral 0.60).",
           "domain_authority": "Scored 0.8800 × weight 0.2 = contribution 0.1760. This is because the domain tier is institutional (hardcoded score).",
-          "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the publication date is within 90 days.",
-          "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+          "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the publication date is within 91-180 days.",
+          "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks a disclaimer.",
           "final_calculation": "(0.2760 + 0.1200 + 0.1760 + 0.1350 + 0.1275) × 0.8 = 0.8345 × 0.8 = 0.6680"
         },
         "key_drivers": [
@@ -476,7 +476,7 @@
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Verifying author credentials on health.harvard.edu: potential gap of 0.152 suggests a data extraction issue"
+          "Verifying author credentials: author credibility score 0.9200 → 0.95, change = +0.03 × 0.3 = +0.009 to total"
         ],
         "anomaly_flag": true,
         "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: health.harvard.edu is a high-authority institutional source (expected minimum score: 0.82) but received 0.668. Gap of 0.152 suggests a data extraction issue.",
@@ -517,13 +517,13 @@
       }
     },
     "ai_explanation": {
-      "summary": "This health.harvard.edu blog scores 0.668/1.000 (MODERATE TRUST). The primary driver is author credibility (0.9200 × 0.3 = 0.2760) from institutional tier credentials.",
+      "summary": "This health.harvard.edu blog scores 0.6680/1.000 (MODERATE TRUST). The primary driver is author credibility (0.9200 × 0.3 = 0.2760) from institutional tier credentials.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.9200 × weight 0.3 = contribution 0.2760. This is because C.W. Schmidt has institutional tier credentials ['MD'].",
-        "citation_count": "Scored 0.6000 × weight 0.2 = contribution 0.1200. This is because the domain tier is institutional and citation count is neutral 0.60.",
+        "author_credibility": "Scored 0.9200 × weight 0.3 = contribution 0.2760. This is because the author has institutional tier credentials (['MD']).",
+        "citation_count": "Scored 0.6000 × weight 0.2 = contribution 0.1200. This is because the domain tier is institutional (neutral 0.60).",
         "domain_authority": "Scored 0.8800 × weight 0.2 = contribution 0.1760. This is because the domain tier is institutional (hardcoded score).",
-        "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the publication date is within 90 days.",
-        "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+        "recency": "Scored 0.9000 × weight 0.15 = contribution 0.1350. This is because the publication date is within 91-180 days.",
+        "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks a disclaimer.",
         "final_calculation": "(0.2760 + 0.1200 + 0.1760 + 0.1350 + 0.1275) × 0.8 = 0.8345 × 0.8 = 0.6680"
       },
       "key_drivers": [
@@ -533,7 +533,7 @@
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Verifying author credentials on health.harvard.edu: potential gap of 0.152 suggests a data extraction issue"
+        "Verifying author credentials: author credibility score 0.9200 → 0.95, change = +0.03 × 0.3 = +0.009 to total"
       ],
       "anomaly_flag": true,
       "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: health.harvard.edu is a high-authority institutional source (expected minimum score: 0.82) but received 0.668. Gap of 0.152 suggests a data extraction issue.",
@@ -637,7 +637,7 @@
         "spam_signals": 1,
         "total_urls": 3
       },
-      "scraped_at": "2026-04-23T10:08:14.675028+00:00"
+      "scraped_at": "2026-04-23T10:20:35.557121+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -704,10 +704,10 @@
       "ai_explanation": {
         "summary": "This YouTube video scores 0.5770/1.000 (LOW TRUST). The primary driver is author credibility (0.4910 × 0.3 = 0.1473) from the open platform tier.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on an open platform with no credentials found.",
-          "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because there is no engagement data, so the base score is 0.10.",
-          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
-          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-03-24, which is within the 0-90 days range.",
+          "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on the open platform tier with no credentials found, followers, or citations.",
+          "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because the domain tier is open and no engagement data was available.",
+          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform and the author credibility is boosted.",
+          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
           "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but does not have a disclaimer.",
           "final_calculation": "(0.1473 + 0.1154 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5767 × 1.0 = 0.5770"
         },
@@ -718,7 +718,7 @@
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing author credibility by adding credentials: score 0.4910 → 0.80 (institutional tier), change = +0.3290 × 0.3 = +0.0987 to total"
+          "Increasing author credibility by adding credentials: score 0.4910 → 0.80, change = +0.2890 × 0.3 = +0.0867 to total"
         ],
         "anomaly_flag": true,
         "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.491). Range of 0.509 may indicate incomplete extraction.",
@@ -747,10 +747,10 @@
     "ai_explanation": {
       "summary": "This YouTube video scores 0.5770/1.000 (LOW TRUST). The primary driver is author credibility (0.4910 × 0.3 = 0.1473) from the open platform tier.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on an open platform with no credentials found.",
-        "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because there is no engagement data, so the base score is 0.10.",
-        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
-        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-03-24, which is within the 0-90 days range.",
+        "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on the open platform tier with no credentials found, followers, or citations.",
+        "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because the domain tier is open and no engagement data was available.",
+        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform and the author credibility is boosted.",
+        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
         "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but does not have a disclaimer.",
         "final_calculation": "(0.1473 + 0.1154 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5767 × 1.0 = 0.5770"
       },
@@ -761,7 +761,7 @@
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing author credibility by adding credentials: score 0.4910 → 0.80 (institutional tier), change = +0.3290 × 0.3 = +0.0987 to total"
+        "Increasing author credibility by adding credentials: score 0.4910 → 0.80, change = +0.2890 × 0.3 = +0.0867 to total"
       ],
       "anomaly_flag": true,
       "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.491). Range of 0.509 may indicate incomplete extraction.",
@@ -833,8 +833,8 @@
       "transcript_source": "supadata",
       "word_count": 8807,
       "chunk_count": 18,
-      "view_count": 9995,
-      "like_count": 391,
+      "view_count": 10008,
+      "like_count": 392,
       "comment_count": 86,
       "subscriber_count": 237000,
       "subscribers_hidden": false,
@@ -847,7 +847,7 @@
         "spam_signals": 0,
         "total_urls": 4
       },
-      "scraped_at": "2026-04-23T10:08:19.654966+00:00"
+      "scraped_at": "2026-04-23T10:20:40.642671+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -857,13 +857,13 @@
         "signals": {
           "channel_name": "Founders Podcast",
           "subscriber_count": 237000,
-          "view_count": 9995,
-          "like_count": 391,
+          "view_count": 10008,
+          "like_count": 392,
           "credentials_found": [],
           "tier": "open_platform",
           "subscriber_boost": 0.192,
-          "like_view_ratio": 0.0391,
-          "like_ratio_boost": 0.0733,
+          "like_view_ratio": 0.0392,
+          "like_ratio_boost": 0.0734,
           "citations_in_content": 0
         }
       },
@@ -874,8 +874,8 @@
         "signals": {
           "clap_count": 0,
           "citation_count": 0,
-          "view_count": 9995,
-          "like_count": 391,
+          "view_count": 10008,
+          "like_count": 392,
           "domain_tier": "open"
         }
       },
@@ -912,23 +912,23 @@
       "weighted_sum": 0.5571,
       "final_score": 0.557,
       "ai_explanation": {
-        "summary": "This YouTube video scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
+        "summary": "The Founders Podcast YouTube video 'How Arnold Schwarzenegger Won' scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author is on the open platform tier with no credentials found.",
-          "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because the domain tier is open with no engagement data.",
-          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform with an author credibility boost.",
+          "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author has no credentials found, followers, or citations.",
+          "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because no engagement data was found, resulting in a base score of 0.10.",
+          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
           "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
           "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but lacks a disclaimer.",
           "final_calculation": "(0.1485 + 0.0946 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5571 × 1.0 = 0.5570"
         },
         "key_drivers": [
           "author_credibility: 0.1485 (0.4950 × 0.3)",
-          "citation_count: 0.0946 (0.4730 × 0.2)",
-          "recency: 0.1500 (1.0000 × 0.15)"
+          "recency: 0.1500 (1.0000 × 0.15)",
+          "citation_count: 0.0946 (0.4730 × 0.2)"
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing author credibility by adding credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
+          "Increasing author credibility through verified credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
         ],
         "anomaly_flag": true,
         "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.495). Range of 0.505 may indicate incomplete extraction.",
@@ -955,23 +955,23 @@
       }
     },
     "ai_explanation": {
-      "summary": "This YouTube video scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
+      "summary": "The Founders Podcast YouTube video 'How Arnold Schwarzenegger Won' scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author is on the open platform tier with no credentials found.",
-        "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because the domain tier is open with no engagement data.",
-        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform with an author credibility boost.",
+        "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author has no credentials found, followers, or citations.",
+        "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because no engagement data was found, resulting in a base score of 0.10.",
+        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
         "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
         "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but lacks a disclaimer.",
         "final_calculation": "(0.1485 + 0.0946 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5571 × 1.0 = 0.5570"
       },
       "key_drivers": [
         "author_credibility: 0.1485 (0.4950 × 0.3)",
-        "citation_count: 0.0946 (0.4730 × 0.2)",
-        "recency: 0.1500 (1.0000 × 0.15)"
+        "recency: 0.1500 (1.0000 × 0.15)",
+        "citation_count: 0.0946 (0.4730 × 0.2)"
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing author credibility by adding credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
+        "Increasing author credibility through verified credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
       ],
       "anomaly_flag": true,
       "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.495). Range of 0.505 may indicate incomplete extraction.",
@@ -1006,12 +1006,12 @@
     "language": "en",
     "region": "Unknown",
     "topic_tags": [
-      "Outcomes Ocd",
-      "Treatments Ocd",
-      "Ocd Symptom",
-      "Disability Ocd",
-      "Ocd Individuals",
-      "Ocd Pathogenesis"
+      "Obsessive – Compulsive",
+      "‘ Completeness ’.",
+      "Seemingly Homogenous Disorder",
+      "Relatively Homogenous Disorder",
+      "Used Operational Criteria",
+      "Individual Feels Driven"
     ],
     "trust_score": 0.64,
     "content_chunks": [
@@ -1054,7 +1054,7 @@
       "search_query": "psychology cognitive behavioral therapy",
       "word_count": 10805,
       "chunk_count": 25,
-      "scraped_at": "2026-04-23T10:08:13.096176+00:00"
+      "scraped_at": "2026-04-23T10:20:34.138268+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -1127,12 +1127,26 @@
       "weighted_sum": 0.8005,
       "final_score": 0.64,
       "ai_explanation": {
-        "summary": "{\n  \"summary\": \"This pubmed.ncbi.nlm.nih.gov article scores 0.6400/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier.\",\n  \"mathematical_breakdown\": {\n    \"author_credibility\": \"Scored 0.8600 × weight 0.3 = contribution 0.2580. This i",
-        "mathematical_breakdown": {},
-        "key_drivers": [],
-        "improvement_suggestions": [],
+        "summary": "This pubmed.ncbi.nlm.nih.gov article scores 0.640/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier, combined with a neutral citation count.",
+        "mathematical_breakdown": {
+          "author_credibility": "Scored 0.8600 × weight 0.3 = contribution 0.2580. This is because the author is from an institutional tier (pubmed.ncbi.nlm.nih.gov) with no credentials found.",
+          "citation_count": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (neutral 0.60).",
+          "domain_authority": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (hardcoded score).",
+          "recency": "Scored 0.1000 × weight 0.15 = contribution 0.0150. This is because the article was published 2019-08-01, which is more than 1 year ago.",
+          "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+          "final_calculation": "(0.2580 + 0.2000 + 0.2000 + 0.0150 + 0.1275) × 0.8 = 0.8005 × 0.8 = 0.6400"
+        },
+        "key_drivers": [
+          "author_credibility: 0.2580 (0.8600 × 0.3)",
+          "citation_count: 0.2000 (1.0000 × 0.2)",
+          "domain_authority: 0.2000 (1.0000 × 0.2)"
+        ],
+        "improvement_suggestions": [
+          "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
+          "Verifying author credentials: if verified, author credibility score may increase to 0.95 (0.95 × 0.3 = 0.285)"
+        ],
         "anomaly_flag": true,
-        "anomaly_reason": "pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
+        "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
         "verification_questions": [
           "Is 'Dan J Stein, Daniel L C Costa, Christine Lochner, Euripedes C Miguel, Y C Janardhan Reddy, Roseli G Shavitt, Odile A van den Heuvel, H Blair Simpson' a verified pubmed.ncbi.nlm.nih.gov author?",
           "Was the full article content extracted correctly?",
@@ -1179,12 +1193,26 @@
       }
     },
     "ai_explanation": {
-      "summary": "{\n  \"summary\": \"This pubmed.ncbi.nlm.nih.gov article scores 0.6400/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier.\",\n  \"mathematical_breakdown\": {\n    \"author_credibility\": \"Scored 0.8600 × weight 0.3 = contribution 0.2580. This i",
-      "mathematical_breakdown": {},
-      "key_drivers": [],
-      "improvement_suggestions": [],
+      "summary": "This pubmed.ncbi.nlm.nih.gov article scores 0.640/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier, combined with a neutral citation count.",
+      "mathematical_breakdown": {
+        "author_credibility": "Scored 0.8600 × weight 0.3 = contribution 0.2580. This is because the author is from an institutional tier (pubmed.ncbi.nlm.nih.gov) with no credentials found.",
+        "citation_count": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (neutral 0.60).",
+        "domain_authority": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (hardcoded score).",
+        "recency": "Scored 0.1000 × weight 0.15 = contribution 0.0150. This is because the article was published 2019-08-01, which is more than 1 year ago.",
+        "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+        "final_calculation": "(0.2580 + 0.2000 + 0.2000 + 0.0150 + 0.1275) × 0.8 = 0.8005 × 0.8 = 0.6400"
+      },
+      "key_drivers": [
+        "author_credibility: 0.2580 (0.8600 × 0.3)",
+        "citation_count: 0.2000 (1.0000 × 0.2)",
+        "domain_authority: 0.2000 (1.0000 × 0.2)"
+      ],
+      "improvement_suggestions": [
+        "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
+        "Verifying author credentials: if verified, author credibility score may increase to 0.95 (0.95 × 0.3 = 0.285)"
+      ],
       "anomaly_flag": true,
-      "anomaly_reason": "pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
+      "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
       "verification_questions": [
         "Is 'Dan J Stein, Daniel L C Costa, Christine Lochner, Euripedes C Miguel, Y C Janardhan Reddy, Roseli G Shavitt, Odile A van den Heuvel, H Blair Simpson' a verified pubmed.ncbi.nlm.nih.gov author?",
         "Was the full article content extracted correctly?",

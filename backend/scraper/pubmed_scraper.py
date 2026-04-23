@@ -1,18 +1,15 @@
-# backend/scraper/pubmed_scraper.py
-# ============================================================
-# PubMed Scraper — NCBI E-utilities API
-#
-# Why API instead of Playwright?
-# → PubMed triggers reCAPTCHA on automated browsers
-# → NCBI provides an official free REST API
-# → More reliable, faster, structured data
-# → Professional approach (what real researchers use)
-#
-# API Flow:
-#   esearch → find PMIDs for query
-#   efetch  → get article metadata (XML)
-#   PMC API → get full text if available
-# ============================================================
+"""PubMed scraper built on NCBI E-utilities.
+
+Why API-first instead of browser automation?
+- Fewer bot-blocking issues than Playwright
+- Official and stable interface from NCBI
+- Faster, structured data pipeline
+
+Request flow:
+    esearch -> collect PMIDs
+    efetch  -> pull article metadata (XML)
+    PMC API -> fetch full text when available
+"""
 
 import json
 import os
@@ -35,9 +32,7 @@ from utils.tagging import extract_tags
 from utils.language_detector import detect_language
 
 
-# ============================================================
-# NCBI API Constants
-# ============================================================
+# NCBI API endpoints
 
 ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 EFETCH_URL  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
@@ -47,9 +42,7 @@ PMC_OA_URL  = "https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi"
 PMC_OAI_URL = "https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi"
 
 
-# ============================================================
-# HTTP
-# ============================================================
+# HTTP helpers
 
 def _get_headers() -> dict:
     return {
@@ -117,9 +110,7 @@ def _print_metadata(result: dict):
     print(f"[EFETCH] ✅ PMC ID   : {result['pmc_id'] or 'Not available'}")
     print(f"[EFETCH] ✅ DOI      : {result['doi'] or 'Not available'}")
     print(f"[EFETCH] ✅ Citations: {result['citation_count']}")
-# ============================================================
 # Step 1 — Search: Get PMIDs
-# ============================================================
 
 def _search_pubmed(query: str, max_results: int = 5) -> list:
     """
@@ -172,9 +163,7 @@ def _search_pubmed(query: str, max_results: int = 5) -> list:
     except Exception as e:
         print(f"[ERROR] esearch failed: {e}")
         return []
-# ============================================================
 # Step 2 — Fetch: Get Article Metadata
-# ============================================================
 
 def _fetch_article_metadata(pmid: str) -> dict:
     """
@@ -410,9 +399,7 @@ def _month_to_num(month: str) -> str:
     return months.get(month.lower()[:3], "1")
 
 
-# ============================================================
 # Step 3 — Citation Count
-# ============================================================
 
 def _get_citation_count(pmid: str) -> int:
     """
@@ -447,9 +434,7 @@ def _get_citation_count(pmid: str) -> int:
         return 0
 
 
-# ============================================================
 # Step 4 — Full Text via PMC API
-# ============================================================
 
 def _fetch_full_text(pmc_id: str) -> Optional[str]:
     """
@@ -578,9 +563,7 @@ def _fetch_full_text_html(pmc_id: str) -> Optional[str]:
         return None
 
 
-# ============================================================
 # Text Cleaning
-# ============================================================
 
 def _clean_pubmed_text(text: str) -> str:
     """
@@ -652,9 +635,7 @@ def _clean_pubmed_text(text: str) -> str:
     return "\n".join(cleaned)
 
 
-# ============================================================
 # Helpers
-# ============================================================
 
 def _detect_medical_disclaimer(text: str) -> bool:
     phrases = [
@@ -692,9 +673,7 @@ def _error_result(query: str, error_msg: str) -> dict:
     }
 
 
-# ============================================================
 # Core Pipeline
-# ============================================================
 
 def scrape_pubmed(domain_query: str) -> dict:
     """
@@ -819,9 +798,7 @@ def scrape_pubmed(domain_query: str) -> dict:
     }
 
 
-# ============================================================
 # Direct Runner
-# ============================================================
 
 if __name__ == "__main__":
 

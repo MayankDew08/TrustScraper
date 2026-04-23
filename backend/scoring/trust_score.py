@@ -1,23 +1,21 @@
-# backend/scoring/trust_score.py
-# ============================================================
-# Trust Score Engine
-#
-# Formula:
-#   Trust Score = (
-#       w1 × author_credibility   [0.30] +
-#       w2 × citation_count       [0.20] +
-#       w3 × domain_authority     [0.20] +
-#       w4 × recency              [0.15] +
-#       w5 × medical_disclaimer   [0.15]
-#   ) × abuse_multiplier
-#
-# Score range: 0.0 – 1.0
-#
-# Source tiers:
-#   institutional → Harvard, Nature, NIH, WHO (.edu/.gov)
-#   open_platform → Medium, YouTube, unknown blogs
-#   pubmed        → NCBI peer-reviewed database
-# ============================================================
+"""Trust score engine.
+
+Core formula:
+    Trust Score = (
+            w1 * author_credibility   [0.30] +
+            w2 * citation_count       [0.20] +
+            w3 * domain_authority     [0.20] +
+            w4 * recency              [0.15] +
+            w5 * medical_disclaimer   [0.15]
+    ) * abuse_multiplier
+
+Final score range: 0.0 to 1.0
+
+Source tiers used in scoring:
+    institutional -> Harvard, Nature, NIH, WHO (.edu/.gov)
+    open_platform -> Medium, YouTube, unknown blogs
+    pubmed        -> NCBI peer-reviewed database
+"""
 
 import math
 import re
@@ -30,13 +28,11 @@ from typing import Optional, Tuple
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
 
-# Import AI explainer — integrated into pipeline
+# AI explanation helper used during scoring output
 from scoring.ai_explainer import generate_trust_explanation
 
 
-# ============================================================
-# Weights — must sum to 1.0
-# ============================================================
+# Weights (must sum to 1.0)
 
 WEIGHTS = {
     "author_credibility":  0.30,
@@ -49,9 +45,7 @@ WEIGHTS = {
 assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
 
 
-# ============================================================
-# Credential Keywords
-# ============================================================
+# Credential keyword lists
 
 NAME_CREDENTIALS = [
     "md", "m.d", "m.d.",
@@ -92,9 +86,7 @@ INSTITUTION_SIGNALS = [
 ]
 
 
-# ============================================================
-# Domain Authority Maps
-# ============================================================
+# Domain authority map
 
 DOMAIN_AUTHORITY = {
     # Academic / Government — Tier 1
@@ -234,9 +226,7 @@ MISINFORMATION_PHRASES = [
 ]
 
 
-# ============================================================
 # Source Tier Classification
-# ============================================================
 
 def _get_source_tier(domain: str) -> str:
     """
@@ -258,9 +248,7 @@ def _get_source_tier(domain: str) -> str:
     return "open"
 
 
-# ============================================================
 # Citation Count in Content
-# ============================================================
 
 def _count_citations_in_content(content: str) -> int:
     """
@@ -287,9 +275,7 @@ def _count_citations_in_content(content: str) -> int:
     return min(count, 10)
 
 
-# ============================================================
 # Variable 1 — Author Credibility
-# ============================================================
 
 def _score_pubmed_author(author: str) -> Tuple[float, dict]:
     """
@@ -778,9 +764,7 @@ def score_author_credibility(
     )
 
 
-# ============================================================
 # Variable 2 — Citation / Engagement Score
-# ============================================================
 
 def score_citation_count(
     citation_count: int = 0,
@@ -841,9 +825,7 @@ def score_citation_count(
     return round(score, 3)
 
 
-# ============================================================
 # Variable 3 — Domain Authority
-# ============================================================
 
 def score_domain_authority(
     domain: str,
@@ -942,9 +924,7 @@ def _detect_medium_publication(content: str) -> float:
     return round(best_boost, 3)
 
 
-# ============================================================
 # Variable 4 — Recency
-# ============================================================
 
 def score_recency(published_date: str) -> float:
     """
@@ -980,9 +960,7 @@ def score_recency(published_date: str) -> float:
     return 0.10
 
 
-# ============================================================
 # Variable 5 — Medical Disclaimer
-# ============================================================
 
 def score_medical_disclaimer(
     content: str,
@@ -1060,9 +1038,7 @@ def score_medical_disclaimer(
     return 0.20, True
 
 
-# ============================================================
 # Abuse Detection
-# ============================================================
 
 def compute_abuse_multiplier(
     author: str,
@@ -1247,9 +1223,7 @@ def compute_abuse_multiplier(
     return max(0.30, round(multiplier, 2)), issues
 
 
-# ============================================================
 # Main Trust Score Function
-# ============================================================
 
 def compute_trust_score(article: dict) -> dict:
     """
@@ -1472,9 +1446,7 @@ def compute_trust_score(article: dict) -> dict:
     return breakdown
 
 
-# ============================================================
 # Batch Scorer
-# ============================================================
 
 def score_all(articles: list) -> list:
     """
@@ -1515,9 +1487,7 @@ def score_all(articles: list) -> list:
     return articles
 
 
-# ============================================================
 # Direct Runner — Score Existing JSON Files
-# ============================================================
 
 if __name__ == "__main__":
 

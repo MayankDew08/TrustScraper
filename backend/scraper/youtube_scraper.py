@@ -1,21 +1,19 @@
-# backend/scraper/youtube_scraper.py
-# ============================================================
-# YouTube Scraper — Data API v3 + Supadata Transcript API
-#
-# Pipeline:
-#   1. Extract video ID from URL
-#   2. YouTube Data API → video metadata + channel info
-#   3. Supadata API → transcript (primary)
-#   4. youtube-transcript-api → transcript (fallback)
-#   5. Description analysis → trust signals
-#   6. NLP pipeline → language, tags, chunks
-#
-# Trust Score Signals:
-#   author_credibility → subscribers + like/view ratio + credentials
-#   citation_count     → views + likes (combined log-scaled)
-#   transcript_source  → "supadata" | "official" | "none"
-#                        none = penalized in trust score
-# ============================================================
+"""YouTube scraper using Data API v3 and Supadata transcripts.
+
+High-level flow:
+    1. Parse video ID from URL
+    2. Pull video + channel metadata from YouTube API
+    3. Fetch transcript from Supadata (primary)
+    4. Fall back to youtube-transcript-api if needed
+    5. Analyze description for trust signals
+    6. Run NLP steps (language, tags, chunks)
+
+Trust-related inputs:
+    author_credibility -> subscribers + like/view ratio + credentials
+    citation_count     -> views + likes (log-scaled blend)
+    transcript_source  -> "supadata" | "official" | "none"
+                                                "none" is treated as weaker evidence
+"""
 
 import json
 import os
@@ -44,9 +42,7 @@ from utils.tagging import extract_tags
 from utils.language_detector import detect_language
 
 
-# ============================================================
-# API Clients
-# ============================================================
+# API clients
 
 def _get_youtube_client():
     """Build YouTube Data API v3 client."""
@@ -71,9 +67,7 @@ def _get_supadata_client() -> Optional[Supadata]:
         return None
     return Supadata(api_key=supadata_api_key)
 
-# ============================================================
-# Video ID Extraction
-# ============================================================
+# Video ID parsing
 
 def _extract_video_id(url: str) -> Optional[str]:
     """
@@ -114,9 +108,7 @@ def _extract_video_id(url: str) -> Optional[str]:
     return None
 
 
-# ============================================================
-# Metadata Fetching
-# ============================================================
+# Metadata fetching
 
 def _fetch_video_metadata(youtube, video_id: str) -> dict:
     """
@@ -247,9 +239,7 @@ def _fetch_channel_info(youtube, channel_id: str) -> dict:
         }
 
 
-# ============================================================
 # Transcript Fetching
-# ============================================================
 
 def _fetch_transcript_supadata(url: str) -> Tuple[str, str]:
     """
@@ -450,9 +440,7 @@ def _clean_transcript(text: str) -> str:
     return text
 
 
-# ============================================================
 # Description Analysis
-# ============================================================
 
 def _analyze_description(description: str) -> dict:
     """
@@ -516,9 +504,7 @@ def _analyze_description(description: str) -> dict:
     }
 
 
-# ============================================================
 # Helpers
-# ============================================================
 
 def _detect_medical_disclaimer(text: str) -> bool:
     """Check for medical disclaimer language."""
@@ -560,9 +546,7 @@ def _error_result(url: str, error_msg: str) -> dict:
     }
 
 
-# ============================================================
 # Core Scraper
-# ============================================================
 
 def scrape_youtube(url: str) -> dict:
     """
@@ -707,9 +691,7 @@ def scrape_youtube(url: str) -> dict:
     }
 
 
-# ============================================================
 # Public API
-# ============================================================
 
 def scrape_all_youtube(urls: list) -> list:
     """
@@ -727,9 +709,7 @@ def scrape_all_youtube(urls: list) -> list:
     return results
 
 
-# ============================================================
 # Direct Runner
-# ============================================================
 
 if __name__ == "__main__":
 

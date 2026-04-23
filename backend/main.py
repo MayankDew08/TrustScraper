@@ -1,7 +1,8 @@
-# backend/pipeline.py
-# ============================================================
-# LangGraph Orchestration Pipeline
-# ============================================================
+"""LangGraph orchestration pipeline.
+
+This module is the CLI entrypoint that wires scraping and scoring
+into one graph flow.
+"""
 
 import json
 import os
@@ -22,9 +23,7 @@ from scraper.pubmed_scraper  import scrape_pubmed
 from scoring.trust_score     import score_all
 
 
-# ============================================================
-# Pipeline State
-# ============================================================
+# Shared pipeline state
 
 class PipelineState(TypedDict):
     blog_urls:       list
@@ -40,9 +39,7 @@ class PipelineState(TypedDict):
     total_time_secs: float
 
 
-# ============================================================
-# Default URLs — confirmed working
-# ============================================================
+# Default inputs used by the CLI prompts
 
 DEFAULT_BLOG_URLS = [
     "https://medium.com/@Dr.Shlain/the-long-game-024366b9d61f",
@@ -58,9 +55,7 @@ DEFAULT_YOUTUBE_URLS = [
 DEFAULT_PUBMED_QUERY = "psychology cognitive behavioral therapy"
 
 
-# ============================================================
-# Nodes
-# ============================================================
+# Graph nodes
 
 def input_node(state: PipelineState) -> dict:
     """Validate and log user inputs."""
@@ -411,9 +406,7 @@ def output_node(state: PipelineState) -> dict:
     return {"completed_at": completed_at}
 
 
-# ============================================================
 # Build Graph
-# ============================================================
 
 def build_pipeline():
     """
@@ -460,9 +453,7 @@ def build_pipeline():
     return graph.compile()
 
 
-# ============================================================
 # CLI Interface
-# ============================================================
 
 def get_user_inputs() -> dict:
     """
@@ -531,9 +522,7 @@ def get_user_inputs() -> dict:
     }
 
 
-# ============================================================
 # Entry Point
-# ============================================================
 
 if __name__ == "__main__":
 

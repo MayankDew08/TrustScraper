@@ -8,12 +8,12 @@
     "language": "en",
     "region": "Unknown",
     "topic_tags": [
-      "Outcomes Ocd",
-      "Treatments Ocd",
-      "Ocd Symptom",
-      "Disability Ocd",
-      "Ocd Individuals",
-      "Ocd Pathogenesis"
+      "Obsessive – Compulsive",
+      "‘ Completeness ’.",
+      "Seemingly Homogenous Disorder",
+      "Relatively Homogenous Disorder",
+      "Used Operational Criteria",
+      "Individual Feels Driven"
     ],
     "trust_score": 0.64,
     "content_chunks": [
@@ -56,7 +56,7 @@
       "search_query": "psychology cognitive behavioral therapy",
       "word_count": 10805,
       "chunk_count": 25,
-      "scraped_at": "2026-04-23T10:08:13.096176+00:00"
+      "scraped_at": "2026-04-23T10:20:34.138268+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -129,12 +129,26 @@
       "weighted_sum": 0.8005,
       "final_score": 0.64,
       "ai_explanation": {
-        "summary": "{\n  \"summary\": \"This pubmed.ncbi.nlm.nih.gov article scores 0.6400/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier.\",\n  \"mathematical_breakdown\": {\n    \"author_credibility\": \"Scored 0.8600 × weight 0.3 = contribution 0.2580. This i",
-        "mathematical_breakdown": {},
-        "key_drivers": [],
-        "improvement_suggestions": [],
+        "summary": "This pubmed.ncbi.nlm.nih.gov article scores 0.640/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier, combined with a neutral citation count.",
+        "mathematical_breakdown": {
+          "author_credibility": "Scored 0.8600 × weight 0.3 = contribution 0.2580. This is because the author is from an institutional tier (pubmed.ncbi.nlm.nih.gov) with no credentials found.",
+          "citation_count": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (neutral 0.60).",
+          "domain_authority": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (hardcoded score).",
+          "recency": "Scored 0.1000 × weight 0.15 = contribution 0.0150. This is because the article was published 2019-08-01, which is more than 1 year ago.",
+          "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+          "final_calculation": "(0.2580 + 0.2000 + 0.2000 + 0.0150 + 0.1275) × 0.8 = 0.8005 × 0.8 = 0.6400"
+        },
+        "key_drivers": [
+          "author_credibility: 0.2580 (0.8600 × 0.3)",
+          "citation_count: 0.2000 (1.0000 × 0.2)",
+          "domain_authority: 0.2000 (1.0000 × 0.2)"
+        ],
+        "improvement_suggestions": [
+          "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
+          "Verifying author credentials: if verified, author credibility score may increase to 0.95 (0.95 × 0.3 = 0.285)"
+        ],
         "anomaly_flag": true,
-        "anomaly_reason": "pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
+        "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
         "verification_questions": [
           "Is 'Dan J Stein, Daniel L C Costa, Christine Lochner, Euripedes C Miguel, Y C Janardhan Reddy, Roseli G Shavitt, Odile A van den Heuvel, H Blair Simpson' a verified pubmed.ncbi.nlm.nih.gov author?",
           "Was the full article content extracted correctly?",
@@ -181,12 +195,26 @@
       }
     },
     "ai_explanation": {
-      "summary": "{\n  \"summary\": \"This pubmed.ncbi.nlm.nih.gov article scores 0.6400/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier.\",\n  \"mathematical_breakdown\": {\n    \"author_credibility\": \"Scored 0.8600 × weight 0.3 = contribution 0.2580. This i",
-      "mathematical_breakdown": {},
-      "key_drivers": [],
-      "improvement_suggestions": [],
+      "summary": "This pubmed.ncbi.nlm.nih.gov article scores 0.640/1.000 (MODERATE TRUST). The primary driver is author credibility (0.8600 × 0.3 = 0.2580) from the institutional tier, combined with a neutral citation count.",
+      "mathematical_breakdown": {
+        "author_credibility": "Scored 0.8600 × weight 0.3 = contribution 0.2580. This is because the author is from an institutional tier (pubmed.ncbi.nlm.nih.gov) with no credentials found.",
+        "citation_count": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (neutral 0.60).",
+        "domain_authority": "Scored 1.0000 × weight 0.2 = contribution 0.2000. This is because the domain tier is institutional (hardcoded score).",
+        "recency": "Scored 0.1000 × weight 0.15 = contribution 0.0150. This is because the article was published 2019-08-01, which is more than 1 year ago.",
+        "medical_disclaimer": "Scored 0.8500 × weight 0.15 = contribution 0.1275. This is because the content is medical but lacks an explicit disclaimer.",
+        "final_calculation": "(0.2580 + 0.2000 + 0.2000 + 0.0150 + 0.1275) × 0.8 = 0.8005 × 0.8 = 0.6400"
+      },
+      "key_drivers": [
+        "author_credibility: 0.2580 (0.8600 × 0.3)",
+        "citation_count: 0.2000 (1.0000 × 0.2)",
+        "domain_authority: 0.2000 (1.0000 × 0.2)"
+      ],
+      "improvement_suggestions": [
+        "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
+        "Verifying author credentials: if verified, author credibility score may increase to 0.95 (0.95 × 0.3 = 0.285)"
+      ],
       "anomaly_flag": true,
-      "anomaly_reason": "pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
+      "anomaly_reason": "HIGH_AUTHORITY_LOW_SCORE: pubmed.ncbi.nlm.nih.gov is a high-authority institutional source (expected minimum score: 0.88) but received 0.640. Gap of 0.240 suggests a data extraction issue.",
       "verification_questions": [
         "Is 'Dan J Stein, Daniel L C Costa, Christine Lochner, Euripedes C Miguel, Y C Janardhan Reddy, Roseli G Shavitt, Odile A van den Heuvel, H Blair Simpson' a verified pubmed.ncbi.nlm.nih.gov author?",
         "Was the full article content extracted correctly?",

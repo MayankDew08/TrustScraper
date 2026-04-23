@@ -1,19 +1,17 @@
-# backend/scraper/blog_scraper.py
-# ============================================================
-# Multi-source blog scraper
-#
-# Supported sources:
-#   1. Medium.com    → Playwright (full JS rendering)
-#   2. Nature.com    → Springer API + requests/BS4
-#
-# Two-phase pipeline:
-#   Phase 1: Scrape article content + metadata
-#   Phase 2: Scrape author profiles
-#
-# Why two phases?
-#   Medium: author about page needs separate browser session
-#   Nature: author data comes from API (done in Phase 1)
-# ============================================================
+"""Multi-source blog scraper.
+
+Supported sources:
+    1) Medium.com -> Playwright (JS-rendered pages)
+    2) Nature.com -> Springer APIs + requests/BS4 fallback
+    3) Harvard Health -> requests/BS4 + author profile pages
+
+Two-phase flow:
+    Phase 1: collect article content + metadata
+    Phase 2: enrich author profile details
+
+This split keeps article extraction and profile enrichment independent,
+which makes retries and debugging easier.
+"""
 
 import json
 import os
@@ -22,7 +20,7 @@ import re
 import time
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -41,17 +39,13 @@ from utils.tagging import extract_tags
 from utils.language_detector import detect_language
 
 
-# ============================================================
-# Springer API Constants
-# ============================================================
+# Springer API endpoints
 
 SPRINGER_META_URL = "https://api.springernature.com/meta/v2/json"
 SPRINGER_OA_URL   = "https://api.springernature.com/openaccess/json"
 
 
-# ============================================================
-# Shared Utilities
-# ============================================================
+# Shared utilities
 
 def _get_domain(url: str) -> str:
     """Extract clean domain (no www.) from URL."""
@@ -174,9 +168,7 @@ def _error_result(url: str, error_msg: str) -> dict:
     }
 
 
-# ============================================================
-# Playwright Helpers
-# ============================================================
+# Playwright helpers
 
 def _navigate(page: Page, url: str):
     """Navigate with networkidle → domcontentloaded fallback."""
@@ -212,9 +204,7 @@ def _scroll_page(page: Page):
     page.wait_for_timeout(1000)
 
 
-# ============================================================
-# Medium — Metadata Extraction (BS4)
-# ============================================================
+# Medium: metadata extraction (BS4)
 
 def _extract_json_ld(soup: BeautifulSoup) -> dict:
     """Extract JSON-LD structured metadata."""
@@ -348,9 +338,7 @@ def _extract_date(soup: BeautifulSoup, json_ld: dict) -> str:
     return "Unknown"
 
 
-# ============================================================
 # Medium — Clap Count
-# ============================================================
 
 def _scrape_clap_count(page: Page) -> int:
     """Scrape clap count from Medium article page."""
@@ -397,9 +385,7 @@ def _scrape_clap_count(page: Page) -> int:
     return 0
 
 
-# ============================================================
 # Medium — Article Scraper (Playwright)
-# ============================================================
 
 def _scrape_medium_article(url: str) -> dict:
     """
@@ -529,9 +515,7 @@ def _scrape_medium_article(url: str) -> dict:
     }
 
 
-# ============================================================
 # Nature.com — Springer API + requests
-# ============================================================
 
 def _extract_nature_doi(article_url: str) -> str:
     """
@@ -998,14 +982,10 @@ def _scrape_nature_article_full(url: str) -> dict:
     }
 
 
-# ============================================================
 # Phase 1 — Route by Domain
-# ============================================================
 
-# ============================================================
 # HARVARD HEALTH BLOG — requests + BS4
 # No Playwright needed — server-side rendered
-# ============================================================
 
 HARVARD_HEALTH_DOMAIN = "health.harvard.edu"
 
@@ -1614,9 +1594,9 @@ def _scrape_single_article(url: str) -> dict:
     print(f"[WARN] Unknown domain: {domain} → attempting Playwright")
     return _scrape_medium_article(url)
 
-# ============================================================
+
 # Phase 2 — Medium Author Profile
-# ============================================================
+
 
 def _find_followers_in_body(body_text: str) -> int:
     """
@@ -1902,9 +1882,8 @@ def _scrape_all_author_profiles(results: list) -> list:
 
     return results
 
-# ============================================================
 # Public API
-# ============================================================
+
 
 def scrape_all_blogs(urls: list) -> list:
     """
@@ -1949,9 +1928,7 @@ def scrape_all_blogs(urls: list) -> list:
     return results
 
 
-# ============================================================
 # Direct Runner
-# ============================================================
 
 if __name__ == "__main__":
 

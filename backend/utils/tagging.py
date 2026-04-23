@@ -1,9 +1,8 @@
-# backend/utils/tagging.py
-# ============================================================
-# Topic tagging using KeyBERT (semantic) with RAKE fallback
-# KeyBERT uses sentence-transformers to find keywords
-# that are semantically close to the document meaning
-# ============================================================
+"""Topic tagging helpers.
+
+Try KeyBERT first for semantic phrases, then fall back to RAKE
+when transformer-based extraction is unavailable.
+"""
 
 from typing import List
 from keybert import KeyBERT
@@ -15,14 +14,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
 
-# Download required NLTK data silently
+# Download required NLTK resources quietly.
 nltk.download("stopwords", quiet=True)
 nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 
-# Initialize models once at module level
-# Why: Loading BERT models is expensive (~2-3 seconds)
-# Loading once and reusing is standard production practice
+# Keep the model cached at module level to avoid reload overhead.
 _keybert_model = None
 
 
@@ -30,8 +27,7 @@ def _get_keybert() -> KeyBERT:
     """Lazy load KeyBERT model — only when first needed."""
     global _keybert_model
     if _keybert_model is None:
-        # all-MiniLM-L6-v2: fast, small, good quality
-        # Alternative: paraphrase-multilingual for non-English
+        # all-MiniLM-L6-v2 is a practical speed/quality tradeoff.
         _keybert_model = KeyBERT(model="all-MiniLM-L6-v2")
     return _keybert_model
 
@@ -55,8 +51,7 @@ def extract_tags_keybert(text: str, max_tags: int = None) -> List[str]:
     try:
         kw_model = _get_keybert()
 
-        # Extract keyphrases
-        # diversity=0.5 reduces redundant similar tags
+        # diversity=0.5 helps avoid near-duplicate phrases.
         keywords = kw_model.extract_keywords(
             text[:5000],  # Cap input for performance
             keyphrase_ngram_range=(
@@ -70,7 +65,7 @@ def extract_tags_keybert(text: str, max_tags: int = None) -> List[str]:
             diversity=0.5,
         )
 
-        # keywords is list of (phrase, score) tuples
+        # KeyBERT returns (phrase, score) tuples.
         return [kw[0].title() for kw in keywords]
 
     except Exception as e:
@@ -81,8 +76,8 @@ def extract_tags_keybert(text: str, max_tags: int = None) -> List[str]:
 def extract_tags_rake(text: str, max_tags: int = None) -> List[str]:
     """
     Fallback keyword extractor using RAKE algorithm.
-    RAKE = Rapid Automatic Keyword Extraction
-    Frequency-based, no model needed.
+    RAKE = Rapid Automatic Keyword Extraction.
+    It is frequency-based and does not require a transformer model.
     """
     max_tags = max_tags or settings.max_tags
 
@@ -94,7 +89,7 @@ def extract_tags_rake(text: str, max_tags: int = None) -> List[str]:
         rake.extract_keywords_from_text(text[:5000])
         phrases = rake.get_ranked_phrases()
 
-        # Filter: max 3 words per tag, min 3 chars
+        # Keep short, readable phrases for downstream use.
         filtered = [
             p.title()
             for p in phrases

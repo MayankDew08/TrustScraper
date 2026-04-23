@@ -1,13 +1,11 @@
-# backend/scoring/ai_explainer.py
-# ============================================================
-# AI-powered trust score explanation
-#
-# Uses Groq (Llama 3.1) to explain trust scores with
-# complete mathematical transparency.
-#
-# Prompt loaded from prompt.txt — easy to update
-# without touching code.
-# ============================================================
+"""AI-assisted trust score explanations.
+
+This module asks Groq for plain-language explanations while still
+preserving the math behind each score.
+
+The prompt template lives in prompt.txt so prompt tuning can happen
+without touching Python logic.
+"""
 
 import os
 import sys
@@ -21,9 +19,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
 
 
-# ============================================================
-# Prompt Loading
-# ============================================================
+# Prompt loading
 
 _PROMPT_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -38,11 +34,11 @@ def _load_prompt_template() -> str:
     Load prompt template from prompt.txt.
     Cached after first load.
 
-    Why file-based prompt?
-    → Easy to update without touching Python code
-    → Can be version-controlled separately
-    → Non-engineers can edit prompt behavior
-    → Cleaner codebase
+    Why keep prompts in a file?
+    -> Easier to iterate on prompt wording
+    -> Can be versioned independently
+    -> Allows non-Python edits for prompt tuning
+    -> Keeps this module focused on runtime behavior
     """
     global _PROMPT_TEMPLATE
 
@@ -62,7 +58,7 @@ def _load_prompt_template() -> str:
 
 
 def _minimal_fallback_prompt() -> str:
-    """Minimal prompt used if prompt.txt is missing."""
+    """Fallback prompt used when prompt.txt is unavailable."""
     return """You are a trust scoring analyst. Explain the trust score.
 
 {source_data}
@@ -91,9 +87,7 @@ Respond ONLY with valid JSON:
 }}"""
 
 
-# ============================================================
-# Known Authority Thresholds (for anomaly detection)
-# ============================================================
+# Domain thresholds used for anomaly checks
 
 HIGH_AUTHORITY_DOMAINS = {
     "health.harvard.edu":      0.82,
@@ -117,9 +111,7 @@ LOW_AUTHORITY_DOMAINS = {
 }
 
 
-# ============================================================
 # Anomaly Detection
-# ============================================================
 
 def _detect_anomaly(
     score: float,
@@ -286,9 +278,7 @@ def _detect_anomaly(
     }
 
 
-# ============================================================
 # Data Formatters — Fill prompt.txt placeholders
-# ============================================================
 
 def _format_source_data(
     title: str,
@@ -475,9 +465,7 @@ def _format_anomaly_details(anomaly_report: dict) -> str:
     return "\n\n".join(lines)
 
 
-# ============================================================
 # Main Public Function
-# ============================================================
 
 def generate_trust_explanation(
     title: str,
@@ -594,9 +582,7 @@ def generate_trust_explanation(
     return explanation
 
 
-# ============================================================
 # Response Parser
-# ============================================================
 
 def _parse_ai_response(raw: str) -> dict:
     """Parse JSON from AI response. Handles markdown code blocks."""
@@ -645,9 +631,7 @@ def _parse_ai_response(raw: str) -> dict:
     return default
 
 
-# ============================================================
 # Rule-Based Fallback
-# ============================================================
 
 def _rule_based_explanation(
     score: float,

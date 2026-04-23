@@ -63,7 +63,7 @@
         "spam_signals": 1,
         "total_urls": 3
       },
-      "scraped_at": "2026-04-23T10:08:14.675028+00:00"
+      "scraped_at": "2026-04-23T10:20:35.557121+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -130,10 +130,10 @@
       "ai_explanation": {
         "summary": "This YouTube video scores 0.5770/1.000 (LOW TRUST). The primary driver is author credibility (0.4910 × 0.3 = 0.1473) from the open platform tier.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on an open platform with no credentials found.",
-          "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because there is no engagement data, so the base score is 0.10.",
-          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
-          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-03-24, which is within the 0-90 days range.",
+          "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on the open platform tier with no credentials found, followers, or citations.",
+          "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because the domain tier is open and no engagement data was available.",
+          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform and the author credibility is boosted.",
+          "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
           "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but does not have a disclaimer.",
           "final_calculation": "(0.1473 + 0.1154 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5767 × 1.0 = 0.5770"
         },
@@ -144,7 +144,7 @@
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing author credibility by adding credentials: score 0.4910 → 0.80 (institutional tier), change = +0.3290 × 0.3 = +0.0987 to total"
+          "Increasing author credibility by adding credentials: score 0.4910 → 0.80, change = +0.2890 × 0.3 = +0.0867 to total"
         ],
         "anomaly_flag": true,
         "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.491). Range of 0.509 may indicate incomplete extraction.",
@@ -173,10 +173,10 @@
     "ai_explanation": {
       "summary": "This YouTube video scores 0.5770/1.000 (LOW TRUST). The primary driver is author credibility (0.4910 × 0.3 = 0.1473) from the open platform tier.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on an open platform with no credentials found.",
-        "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because there is no engagement data, so the base score is 0.10.",
-        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
-        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published 2026-03-24, which is within the 0-90 days range.",
+        "author_credibility": "Scored 0.4910 × weight 0.3 = contribution 0.1473. This is because the author is on the open platform tier with no credentials found, followers, or citations.",
+        "citation_count": "Scored 0.5770 × weight 0.2 = contribution 0.1154. This is because the domain tier is open and no engagement data was available.",
+        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform and the author credibility is boosted.",
+        "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
         "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but does not have a disclaimer.",
         "final_calculation": "(0.1473 + 0.1154 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5767 × 1.0 = 0.5770"
       },
@@ -187,7 +187,7 @@
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing author credibility by adding credentials: score 0.4910 → 0.80 (institutional tier), change = +0.3290 × 0.3 = +0.0987 to total"
+        "Increasing author credibility by adding credentials: score 0.4910 → 0.80, change = +0.2890 × 0.3 = +0.0867 to total"
       ],
       "anomaly_flag": true,
       "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.491). Range of 0.509 may indicate incomplete extraction.",
@@ -259,8 +259,8 @@
       "transcript_source": "supadata",
       "word_count": 8807,
       "chunk_count": 18,
-      "view_count": 9995,
-      "like_count": 391,
+      "view_count": 10008,
+      "like_count": 392,
       "comment_count": 86,
       "subscriber_count": 237000,
       "subscribers_hidden": false,
@@ -273,7 +273,7 @@
         "spam_signals": 0,
         "total_urls": 4
       },
-      "scraped_at": "2026-04-23T10:08:19.654966+00:00"
+      "scraped_at": "2026-04-23T10:20:40.642671+00:00"
     },
     "trust_score_breakdown": {
       "author_credibility": {
@@ -283,13 +283,13 @@
         "signals": {
           "channel_name": "Founders Podcast",
           "subscriber_count": 237000,
-          "view_count": 9995,
-          "like_count": 391,
+          "view_count": 10008,
+          "like_count": 392,
           "credentials_found": [],
           "tier": "open_platform",
           "subscriber_boost": 0.192,
-          "like_view_ratio": 0.0391,
-          "like_ratio_boost": 0.0733,
+          "like_view_ratio": 0.0392,
+          "like_ratio_boost": 0.0734,
           "citations_in_content": 0
         }
       },
@@ -300,8 +300,8 @@
         "signals": {
           "clap_count": 0,
           "citation_count": 0,
-          "view_count": 9995,
-          "like_count": 391,
+          "view_count": 10008,
+          "like_count": 392,
           "domain_tier": "open"
         }
       },
@@ -338,23 +338,23 @@
       "weighted_sum": 0.5571,
       "final_score": 0.557,
       "ai_explanation": {
-        "summary": "This YouTube video scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
+        "summary": "The Founders Podcast YouTube video 'How Arnold Schwarzenegger Won' scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
         "mathematical_breakdown": {
-          "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author is on the open platform tier with no credentials found.",
-          "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because the domain tier is open with no engagement data.",
-          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform with an author credibility boost.",
+          "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author has no credentials found, followers, or citations.",
+          "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because no engagement data was found, resulting in a base score of 0.10.",
+          "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
           "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
           "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but lacks a disclaimer.",
           "final_calculation": "(0.1485 + 0.0946 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5571 × 1.0 = 0.5570"
         },
         "key_drivers": [
           "author_credibility: 0.1485 (0.4950 × 0.3)",
-          "citation_count: 0.0946 (0.4730 × 0.2)",
-          "recency: 0.1500 (1.0000 × 0.15)"
+          "recency: 0.1500 (1.0000 × 0.15)",
+          "citation_count: 0.0946 (0.4730 × 0.2)"
         ],
         "improvement_suggestions": [
           "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-          "Increasing author credibility by adding credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
+          "Increasing author credibility through verified credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
         ],
         "anomaly_flag": true,
         "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.495). Range of 0.505 may indicate incomplete extraction.",
@@ -381,23 +381,23 @@
       }
     },
     "ai_explanation": {
-      "summary": "This YouTube video scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
+      "summary": "The Founders Podcast YouTube video 'How Arnold Schwarzenegger Won' scores 0.5570/1.000 (LOW TRUST). The primary driver is author credibility (0.4950 × 0.3 = 0.1485) from the open platform tier.",
       "mathematical_breakdown": {
-        "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author is on the open platform tier with no credentials found.",
-        "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because the domain tier is open with no engagement data.",
-        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform with an author credibility boost.",
+        "author_credibility": "Scored 0.4950 × weight 0.3 = contribution 0.1485. This is because the author has no credentials found, followers, or citations.",
+        "citation_count": "Scored 0.4730 × weight 0.2 = contribution 0.0946. This is because no engagement data was found, resulting in a base score of 0.10.",
+        "domain_authority": "Scored 0.5200 × weight 0.2 = contribution 0.1040. This is because the domain tier is open platform (base 0.45 + author boost).",
         "recency": "Scored 1.0000 × weight 0.15 = contribution 0.1500. This is because the content was published within the last 90 days.",
         "medical_disclaimer": "Scored 0.4000 × weight 0.15 = contribution 0.0600. This is because the content is medical but lacks a disclaimer.",
         "final_calculation": "(0.1485 + 0.0946 + 0.1040 + 0.1500 + 0.0600) × 1.0 = 0.5571 × 1.0 = 0.5570"
       },
       "key_drivers": [
         "author_credibility: 0.1485 (0.4950 × 0.3)",
-        "citation_count: 0.0946 (0.4730 × 0.2)",
-        "recency: 0.1500 (1.0000 × 0.15)"
+        "recency: 0.1500 (1.0000 × 0.15)",
+        "citation_count: 0.0946 (0.4730 × 0.2)"
       ],
       "improvement_suggestions": [
         "Adding explicit medical disclaimer: disclaimer score 0.85 → 1.00, change = +0.15 × 0.15 = +0.0225 to total",
-        "Increasing author credibility by adding credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
+        "Increasing author credibility through verified credentials or followers: score 0.4950 → 0.80, change = +0.2850 × 0.3 = +0.0855 to total"
       ],
       "anomaly_flag": true,
       "anomaly_reason": "LOW SCORE_COMPONENT_MISMATCH: Large spread between recency (1.000) and author_credibility (0.495). Range of 0.505 may indicate incomplete extraction.",
