@@ -996,11 +996,5 @@ capability without transcripts.
 
 ---
 
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
 *Built as part of the JettyAI Data Scraping Assessment.*
 *Demonstrates production-grade scraping, NLP, and trust scoring.*
