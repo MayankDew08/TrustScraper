@@ -1,25 +1,37 @@
 # backend/scoring/trust_score.py
 # ============================================================
-# Trust Score Engine — Updated for Medium blogs
+# Trust Score Engine
 #
-# Key improvements:
-#   1. Credential detection from author NAME (not just bio)
-#   2. Follower count has meaningful impact
-#   3. Domain authority boosted by author credentials
-#   4. Medical disclaimer: distinguishes essays vs advice
-#   5. Citation detection from article content
-#   6. Platform credibility: proven author = no ceiling
+# Formula:
+#   Trust Score = (
+#       w1 × author_credibility   [0.30] +
+#       w2 × citation_count       [0.20] +
+#       w3 × domain_authority     [0.20] +
+#       w4 × recency              [0.15] +
+#       w5 × medical_disclaimer   [0.15]
+#   ) × abuse_multiplier
+#
+# Score range: 0.0 – 1.0
+#
+# Source tiers:
+#   institutional → Harvard, Nature, NIH, WHO (.edu/.gov)
+#   open_platform → Medium, YouTube, unknown blogs
+#   pubmed        → NCBI peer-reviewed database
 # ============================================================
 
 import math
 import re
 import sys
 import os
+import json
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Tuple
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
+
+# Import AI explainer — integrated into pipeline
+from scoring.ai_explainer import generate_trust_explanation
 
 
 # ============================================================
@@ -27,9 +39,9 @@ from config import settings
 # ============================================================
 
 WEIGHTS = {
-    "author_credibility":  0.30,  # Increased — most important signal
+    "author_credibility":  0.30,
     "citation_count":      0.20,
-    "domain_authority":    0.20,  # Reduced — platform matters less than author
+    "domain_authority":    0.20,
     "recency":             0.15,
     "medical_disclaimer":  0.15,
 }
@@ -41,7 +53,6 @@ assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
 # Credential Keywords
 # ============================================================
 
-# In author NAME (e.g., "Jordan L. Shlain MD")
 NAME_CREDENTIALS = [
     "md", "m.d", "m.d.",
     "phd", "ph.d", "ph.d.",
@@ -51,28 +62,25 @@ NAME_CREDENTIALS = [
     "psyd", "psy.d",
     "msw", "lcsw", "mft",
     "mph", "drph",
-    "bcpa",                     # Board Certified Patient Advocate
+    "bcpa",
     "mba", "msc", "m.sc",
     "prof", "prof.",
     "dr", "dr.",
 ]
 
-# In bio text
 BIO_CREDENTIALS = [
     "professor", "researcher", "scientist",
     "specialist", "consultant", "director",
     "expert", "physician", "surgeon",
     "psychiatrist", "psychologist", "therapist",
     "nutritionist", "dietitian", "clinician",
-    "practitioner", "practising", "practicing",
-    "faculty", "lecturer", "instructor",
+    "practitioner", "faculty", "lecturer",
     "board certified", "board-certified",
     "fellowship", "residency", "attending",
     "medical director", "chief", "founder",
     "published", "peer-reviewed", "peer reviewed",
 ]
 
-# Institution signals in bio
 INSTITUTION_SIGNALS = [
     "university", "institute", "hospital", "college",
     "school of", "department of", "research center",
@@ -85,7 +93,7 @@ INSTITUTION_SIGNALS = [
 
 
 # ============================================================
-# Domain Authority Map
+# Domain Authority Maps
 # ============================================================
 
 DOMAIN_AUTHORITY = {
@@ -102,131 +110,351 @@ DOMAIN_AUTHORITY = {
     "jamanetwork.com":          0.97,
     "bmj.com":                  0.97,
 
-    # Reputable Health — Tier 2
+    # Reputable Medical Institutions — Tier 2
+    "health.harvard.edu":       0.93,
     "mayoclinic.org":           0.92,
+    "hopkinsmedicine.org":      0.90,
+    "clevelandclinic.org":      0.88,
+    "medlineplus.gov":          0.88,
     "webmd.com":                0.80,
     "healthline.com":           0.80,
     "medicalnewstoday.com":     0.78,
     "harvard.edu":              0.95,
     "stanford.edu":             0.95,
     "ox.ac.uk":                 0.93,
+    "cam.ac.uk":                0.92,
 
-    # Quality Tech/AI — Tier 3
+    # Quality Tech / AI — Tier 3
     "realpython.com":           0.75,
     "machinelearningmastery.com": 0.72,
     "towardsdatascience.com":   0.70,
-    "youtube.com":              0.65,
 
-    # Medium base — boosted by author credibility
-    "medium.com":               0.55,
+    # Open Platforms — Penalized Base + Author Ceiling
+    "medium.com":               0.45,
+    "youtube.com":              0.52,
+    "substack.com":             0.42,
+    "wordpress.com":            0.35,
+    "blogger.com":              0.30,
 }
 
-# Medium publications that have editorial standards
+# Institutional domains (get floor scores + implied trust)
+INSTITUTIONAL_DOMAINS = {
+    "pubmed.ncbi.nlm.nih.gov": 0.95,
+    "ncbi.nlm.nih.gov":        0.95,
+    "nih.gov":                 0.92,
+    "who.int":                 0.92,
+    "cdc.gov":                 0.92,
+    "nature.com":              0.90,
+    "science.org":             0.90,
+    "nejm.org":                0.90,
+    "thelancet.com":           0.90,
+    "jamanetwork.com":         0.88,
+    "bmj.com":                 0.88,
+    "health.harvard.edu":      0.88,
+    "mayoclinic.org":          0.87,
+    "hopkinsmedicine.org":     0.86,
+    "clevelandclinic.org":     0.85,
+    "medlineplus.gov":         0.85,
+    "harvard.edu":             0.88,
+    "stanford.edu":            0.88,
+    "ox.ac.uk":                0.86,
+    "cam.ac.uk":               0.86,
+}
+
+# Open platform ceilings — max score regardless of author
+MEDIUM_CEILING  = 0.82
+YOUTUBE_CEILING = 0.78
+
+# Medium publications with editorial standards
 MEDIUM_PUBLICATIONS = {
-    "towards data science":        0.75,
-    "towardsdatascience":          0.75,
-    "the startup":                 0.65,
-    "thestartup":                  0.65,
-    "better humans":               0.65,
-    "entrepreneurship handbook":   0.65,
-    "mind cafe":                   0.62,
-    "tincture":                    0.68,  # Medical/health publication
-    "elemental":                   0.68,  # Medium health publication
-    "personal growth":             0.60,
-    "lifestyle":                   0.58,
-    "careers":                     0.60,
-    "productivity":                0.62,
+    "towards data science":        0.72,
+    "towardsdatascience":          0.72,
+    "the startup":                 0.62,
+    "thestartup":                  0.62,
+    "better humans":               0.62,
+    "entrepreneurship handbook":   0.62,
+    "mind cafe":                   0.60,
+    "tincture":                    0.65,
+    "elemental":                   0.65,
+    "personal growth":             0.57,
+    "lifestyle":                   0.55,
+    "careers":                     0.57,
+    "productivity":                0.60,
 }
+
+# Medical disclaimer phrases
+DISCLAIMER_PHRASES = [
+    "consult a doctor", "consult your physician",
+    "not a substitute", "healthcare professional",
+    "seek medical attention", "talk to your doctor",
+    "not medical advice", "for informational purposes only",
+    "always consult", "speak with a qualified",
+    "not intended to diagnose", "medical professional",
+    "before starting any", "consult with a",
+    "professional medical advice",
+]
+
+# Medical topic signals
+MEDICAL_TOPIC_SIGNALS = [
+    "health", "medical", "disease", "treatment",
+    "diagnosis", "drug", "medication", "therapy",
+    "clinical", "symptom", "nutrition", "diet",
+    "mental health", "depression", "anxiety",
+    "cancer", "diabetes", "obesity", "vaccine",
+    "supplement", "exercise", "fitness", "wellness",
+    "nervous system", "brain", "psychology",
+    "neuroscience", "cognitive", "behavior",
+    "doctor", "hospital", "patient", "cure",
+]
+
+PERSONAL_ESSAY_SIGNALS = [
+    "in my experience", "i remember", "i learned",
+    "my story", "personal journey", "when i was",
+    "i decided", "i felt", "i noticed",
+    "from my perspective", "i believe", "in my opinion",
+]
+
+MEDICAL_ADVICE_SIGNALS = [
+    "you should take", "you should use", "recommended dose",
+    "take this medication", "treatment for", "cure for",
+    "remedy for", "how to treat", "helps treat",
+    "proven to cure", "clinically proven",
+    "supplement", "dosage", "side effects",
+]
+
+MISINFORMATION_PHRASES = [
+    "doctors don't want you to know",
+    "big pharma doesn't want",
+    "miracle cure", "100% natural cure",
+    "guaranteed to cure", "secret remedy",
+    "they don't want you to know",
+    "proven to cure cancer",
+    "cures all diseases", "miracle drug",
+    "no side effects", "ancient secret",
+]
+
+
+# ============================================================
+# Source Tier Classification
+# ============================================================
+
+def _get_source_tier(domain: str) -> str:
+    """
+    Classify domain into trust tier.
+
+    Returns:
+        "institutional" → Harvard, Nature, NIH, WHO, .edu, .gov
+        "open"          → Medium, YouTube, unknown blogs
+    """
+    domain = domain.lower().replace("www.", "")
+
+    if domain in INSTITUTIONAL_DOMAINS:
+        return "institutional"
+    if domain.endswith(".edu") or domain.endswith(".gov"):
+        return "institutional"
+    if ".ac." in domain:
+        return "institutional"
+
+    return "open"
+
+
+# ============================================================
+# Citation Count in Content
+# ============================================================
+
+def _count_citations_in_content(content: str) -> int:
+    """
+    Count academic citations in article text.
+
+    Detects:
+    - Author (Year): Smith (2022), Smith et al. (2022)
+    - DOI mentions
+    - Journal names
+    """
+    if not content:
+        return 0
+
+    patterns = [
+        r'\b[A-Z][a-z]+(?:\s+et\s+al\.?)?\s*\(\d{4}\)',
+        r'\b(?:doi|DOI):\s*10\.',
+        r'\b(?:Journal|Proceedings|Review|Lancet|Nature|Science|NEJM)\b',
+    ]
+
+    count = 0
+    for pattern in patterns:
+        count += len(re.findall(pattern, content))
+
+    return min(count, 10)
 
 
 # ============================================================
 # Variable 1 — Author Credibility
 # ============================================================
 
-def score_author_credibility(
+def _score_pubmed_author(author: str) -> Tuple[float, dict]:
+    """
+    PubMed authors get elevated floor scores.
+    Author count = peer review signal.
+    """
+    if not author or author == "Unknown Author":
+        return 0.50, {"reason": "no author but pubmed source"}
+
+    count = len([a for a in author.split(",") if a.strip()])
+
+    if count >= 5:   score = 0.95
+    elif count >= 3: score = 0.90
+    elif count >= 2: score = 0.85
+    else:            score = 0.80
+
+    return score, {
+        "author_count": count,
+        "source":       "pubmed",
+        "tier":         "pubmed",
+    }
+
+
+def _score_institutional_author(
     author: str,
-    bio: str = "",
-    followers: int = 0,
-    article_count: int = 0,
-    source_type: str = "blog",
-    content: str = "",
-) -> tuple:
+    bio: str,
+    domain: str,
+    author_profile: dict,
+    content: str,
+) -> Tuple[float, dict]:
     """
-    Score author credibility.
+    Score author from institutional source (Harvard, Nature, NIH).
 
-    Key fix: Check credentials in AUTHOR NAME first.
-    "Jordan L. Shlain MD" → "md" detected → high score.
-    "Malynnda Stewart, PhD, BCPA" → "phd", "bcpa" detected.
-
-    Also checks:
-    - Bio text for expertise signals
-    - Follower count (meaningful but not dominant)
-    - Article count (experience signal)
-    - Citations in content (research awareness)
-
-    Returns:
-        (score: float, signals_dict: dict)
+    Starts from institution floor score.
+    Boosted by credentials, affiliation, ORCID.
+    NOT penalized for missing followers/claps.
     """
-    if source_type == "pubmed":
-        score, signals = _score_pubmed_author(author)
-        return score, signals
+    floor_score = INSTITUTIONAL_DOMAINS.get(domain, 0.80)
 
+    if domain.endswith(".edu"):
+        floor_score = max(floor_score, 0.85)
+    if domain.endswith(".gov"):
+        floor_score = max(floor_score, 0.88)
+
+    score = floor_score
+
+    signals = {
+        "author_name":       author,
+        "institution_floor": floor_score,
+        "tier":              "institutional",
+        "credentials_found": [],
+        "has_bio":           bool(bio),
+    }
+
+    author_lower = (author or "").lower()
+    bio_lower    = (bio or "").lower()
+
+    # Credentials in author name
+    name_creds = []
+    for cred in NAME_CREDENTIALS:
+        pattern = r'\b' + re.escape(cred) + r'\b'
+        if re.search(pattern, author_lower):
+            name_creds.append(cred)
+    if name_creds:
+        cred_boost = min(len(name_creds) * 0.03, 0.08)
+        score += cred_boost
+        signals["credentials_found"].extend(name_creds)
+        print(f"[CREDIBILITY] Name creds {name_creds} → +{cred_boost:.3f}")
+
+    # Credentials in bio
+    bio_creds = [c for c in BIO_CREDENTIALS if c in bio_lower]
+    if bio_creds:
+        bio_boost = min(len(bio_creds) * 0.02, 0.05)
+        score += bio_boost
+        signals["credentials_found"].extend(bio_creds[:3])
+        print(f"[CREDIBILITY] Bio creds {bio_creds[:3]} → +{bio_boost:.3f}")
+
+    # Profile credentials (e.g., Harvard author page)
+    profile_creds = author_profile.get("credentials", [])
+    if profile_creds:
+        profile_boost = min(len(profile_creds) * 0.02, 0.05)
+        score += profile_boost
+        signals["credentials_found"].extend(profile_creds)
+        print(f"[CREDIBILITY] Profile creds {profile_creds} → +{profile_boost:.3f}")
+
+    # Institution in bio
+    if any(inst in bio_lower for inst in INSTITUTION_SIGNALS):
+        score += 0.02
+        print(f"[CREDIBILITY] Institution in bio → +0.02")
+
+    # ORCID verified
+    if author_profile.get("orcid"):
+        score += 0.02
+        print(f"[CREDIBILITY] ORCID verified → +0.02")
+
+    # Citations in content
+    citation_count = _count_citations_in_content(content)
+    if citation_count >= 5:
+        score += 0.03
+        print(f"[CREDIBILITY] {citation_count} citations → +0.03")
+    elif citation_count >= 2:
+        score += 0.02
+    signals["citations_in_content"] = citation_count
+
+    final = round(min(1.0, score), 3)
+    print(f"[CREDIBILITY] Institutional final: {final} (floor={floor_score})")
+    return final, signals
+
+
+def _score_open_platform_author(
+    author: str,
+    bio: str,
+    followers: int,
+    article_count: int,
+    content: str,
+) -> Tuple[float, dict]:
+    """
+    Score author from open platform (Medium, blogs).
+
+    Starts from 0.25 base.
+    Built up by credentials, institution, followers, citations.
+    Penalized for generic/anonymous name.
+    """
     if not author or author.strip() in ("", "Unknown Author"):
         return 0.10, {"reason": "no author"}
 
     author_lower = author.lower().strip()
-    bio_lower    = bio.lower().strip() if bio else ""
-    combined     = f"{author_lower} {bio_lower}"
+    bio_lower    = (bio or "").lower().strip()
+    score        = 0.25
 
-    score   = 0.25  # Base: named author exists
     signals = {
         "author_name":       author,
+        "tier":              "open_platform",
         "credentials_found": [],
         "has_bio":           bool(bio),
         "followers":         followers,
         "article_count":     article_count,
-        "institution_found": False,
-        "citations_in_content": 0,
     }
 
-    # ── Signal 1: Credentials in AUTHOR NAME (strongest) ──
-    # Check name specifically — not combined with bio
-    # so we know credential is claimed in their identity
-    name_creds_found = []
+    # Credentials in name
+    name_creds = []
     for cred in NAME_CREDENTIALS:
-        # Match as word boundary to avoid partial matches
         pattern = r'\b' + re.escape(cred) + r'\b'
         if re.search(pattern, author_lower):
-            name_creds_found.append(cred)
-
-    if name_creds_found:
-        # Each unique credential adds to score
-        cred_boost = min(len(name_creds_found) * 0.18, 0.40)
+            name_creds.append(cred)
+    if name_creds:
+        cred_boost = min(len(name_creds) * 0.18, 0.40)
         score += cred_boost
-        signals["credentials_found"].extend(name_creds_found)
-        print(f"[CREDIBILITY] Name credentials: {name_creds_found} → +{cred_boost:.2f}")
+        signals["credentials_found"].extend(name_creds)
+        print(f"[CREDIBILITY] Name creds {name_creds} → +{cred_boost:.3f}")
 
-    # ── Signal 2: Credentials in Bio ──────────────────────
-    bio_creds_found = []
-    for cred in BIO_CREDENTIALS:
-        if cred in bio_lower:
-            bio_creds_found.append(cred)
-
-    if bio_creds_found:
-        bio_boost = min(len(bio_creds_found) * 0.08, 0.20)
+    # Credentials in bio
+    bio_creds = [c for c in BIO_CREDENTIALS if c in bio_lower]
+    if bio_creds:
+        bio_boost = min(len(bio_creds) * 0.08, 0.20)
         score += bio_boost
-        signals["credentials_found"].extend(bio_creds_found[:3])
-        print(f"[CREDIBILITY] Bio credentials: {bio_creds_found[:3]} → +{bio_boost:.2f}")
+        signals["credentials_found"].extend(bio_creds[:3])
+        print(f"[CREDIBILITY] Bio creds {bio_creds[:3]} → +{bio_boost:.3f}")
 
-    # ── Signal 3: Institution in Bio ──────────────────────
-    institution_found = any(inst in bio_lower for inst in INSTITUTION_SIGNALS)
-    if institution_found:
-        score += 0.15
-        signals["institution_found"] = True
-        print(f"[CREDIBILITY] Institution found in bio → +0.15")
+    # Institution in bio
+    if any(inst in bio_lower for inst in INSTITUTION_SIGNALS):
+        score += 0.20
+        print(f"[CREDIBILITY] Institution in bio → +0.20")
 
-    # ── Signal 4: Real name pattern ───────────────────────
-    # Strip credentials from name first for pattern check
+    # Real name pattern
     clean_name = re.sub(
         r'\b(' + '|'.join(re.escape(c) for c in NAME_CREDENTIALS) + r')\b',
         '', author_lower
@@ -239,105 +467,315 @@ def score_author_credibility(
     )
     if is_real_name:
         score += 0.08
-        print(f"[CREDIBILITY] Real name pattern → +0.08")
+        print(f"[CREDIBILITY] Real name → +0.08")
 
-    # ── Signal 5: Follower count ──────────────────────────
-    # Log scale — meaningful but capped at 0.15
-    # 500 followers   → +0.04
-    # 2000 followers  → +0.08
-    # 10000 followers → +0.12
-    # 100000 followers → +0.15
+    # Follower count (log-scaled, max +0.15)
     if followers > 0:
-        follower_boost = min(
-            math.log10(followers + 1) / 25.0,
-            0.15
-        )
+        follower_boost = min(math.log10(followers + 1) / 25.0, 0.15)
         score += follower_boost
         signals["follower_boost"] = round(follower_boost, 3)
         print(f"[CREDIBILITY] Followers {followers:,} → +{follower_boost:.3f}")
 
-    # ── Signal 6: Article count ───────────────────────────
-    if article_count >= 50:
-        score += 0.05
-    elif article_count >= 20:
-        score += 0.03
-    elif article_count >= 5:
-        score += 0.01
+    # Article count
+    if article_count >= 50:   score += 0.05
+    elif article_count >= 20: score += 0.03
+    elif article_count >= 5:  score += 0.01
 
-    # ── Signal 7: Citations in content ───────────────────
-    # If author cites peer-reviewed papers → high credibility
+    # Citations in content
     citation_count = _count_citations_in_content(content)
     if citation_count >= 5:
         score += 0.12
-        print(f"[CREDIBILITY] {citation_count} citations found → +0.12")
+        print(f"[CREDIBILITY] {citation_count} citations → +0.12")
     elif citation_count >= 2:
         score += 0.07
-        print(f"[CREDIBILITY] {citation_count} citations found → +0.07")
     elif citation_count >= 1:
         score += 0.03
-
     signals["citations_in_content"] = citation_count
 
-    # ── Penalty: Generic/anonymous name ──────────────────
+    # Generic name penalty
     GENERIC = [
         "admin", "staff", "editor", "team", "anonymous",
         "user", "author", "writer", "unknown", "guest",
     ]
     if any(g in author_lower for g in GENERIC):
         score -= 0.20
+        print(f"[CREDIBILITY] Generic name penalty → -0.20")
 
     final = round(max(0.0, min(1.0, score)), 3)
-    print(f"[CREDIBILITY] Final: {final}")
+    print(f"[CREDIBILITY] Open platform final: {final}")
     return final, signals
 
 
-def _count_citations_in_content(content: str) -> int:
+def _score_youtube_author(
+    channel_name: str,
+    subscriber_count: int,
+    channel_description: str,
+    total_videos: int,
+    view_count: int,
+    like_count: int,
+    content: str,
+) -> Tuple[float, dict]:
     """
-    Count academic citations in article content.
+    Score YouTube channel credibility.
 
-    Detects:
-    - Author (Year) format: "Smith (2022)"
-    - Journal references: "Journal of Psychology"
-    - DOI mentions: "doi:"
-    - Reference list patterns
-
-    High citation count = author understands academic literature.
+    Signals:
+    1. Subscriber count (log-scaled)
+    2. Like/view ratio (quality proxy)
+    3. Credentials in channel name/description
+    4. Institution mentions
+    5. Total videos (experience)
+    6. Citations in content
     """
-    if not content:
-        return 0
+    score   = 0.20
+    signals = {
+        "channel_name":      channel_name,
+        "subscriber_count":  subscriber_count,
+        "view_count":        view_count,
+        "like_count":        like_count,
+        "credentials_found": [],
+        "tier":              "open_platform",
+    }
 
-    patterns = [
-        r'\b[A-Z][a-z]+(?:\s+et\s+al\.?)?\s*\(\d{4}\)',  # Smith (2022) or Smith et al. (2022)
-        r'\b(?:doi|DOI):\s*10\.',                           # DOI mentions
-        r'\b(?:Journal|Proceedings|Review|Lancet|Nature|Science|NEJM)\b',  # Journal names
-    ]
+    name_lower = (channel_name or "").lower()
+    desc_lower = (channel_description or "").lower()
+    combined   = f"{name_lower} {desc_lower}"
 
-    count = 0
-    for pattern in patterns:
-        matches = re.findall(pattern, content)
-        count += len(matches)
+    # Subscriber count (log-scaled, max +0.25)
+    if subscriber_count > 0:
+        sub_boost = min(math.log10(subscriber_count + 1) / 28.0, 0.25)
+        score += sub_boost
+        signals["subscriber_boost"] = round(sub_boost, 4)
+        print(f"[YT-CRED] Subscribers {subscriber_count:,} → +{sub_boost:.4f}")
 
-    # Cap at 10 to avoid inflation
-    return min(count, 10)
+    # Like/view ratio (max +0.15)
+    if view_count > 0 and like_count > 0:
+        like_ratio  = like_count / view_count
+        ratio_score = min(like_ratio / 0.08, 1.0) * 0.15
+        score += ratio_score
+        signals["like_view_ratio"]  = round(like_ratio, 4)
+        signals["like_ratio_boost"] = round(ratio_score, 4)
+        print(f"[YT-CRED] Like ratio {like_ratio:.2%} → +{ratio_score:.4f}")
+
+    # Credentials in name/description
+    name_creds = []
+    for cred in NAME_CREDENTIALS:
+        pattern = r'\b' + re.escape(cred) + r'\b'
+        if re.search(pattern, combined):
+            name_creds.append(cred)
+    if name_creds:
+        cred_boost = min(len(name_creds) * 0.10, 0.20)
+        score += cred_boost
+        signals["credentials_found"].extend(name_creds)
+        print(f"[YT-CRED] Credentials {name_creds} → +{cred_boost:.4f}")
+
+    # Institution in description
+    if any(inst in desc_lower for inst in INSTITUTION_SIGNALS):
+        score += 0.10
+        signals["institution_found"] = True
+        print(f"[YT-CRED] Institution found → +0.10")
+
+    # Total videos (experience)
+    if total_videos >= 500:   score += 0.05
+    elif total_videos >= 100: score += 0.03
+    elif total_videos >= 10:  score += 0.01
+
+    # Citations in content
+    citation_count = _count_citations_in_content(content)
+    if citation_count >= 5:
+        score += 0.08
+        print(f"[YT-CRED] {citation_count} citations → +0.08")
+    elif citation_count >= 2:
+        score += 0.04
+    signals["citations_in_content"] = citation_count
+
+    final = round(max(0.0, min(1.0, score)), 3)
+    print(f"[YT-CRED] Final: {final}")
+    return final, signals
 
 
-def _score_pubmed_author(author: str) -> tuple:
-    """PubMed authors get elevated floor scores."""
-    if not author or author == "Unknown Author":
-        return 0.50, {"reason": "no author but pubmed source"}
+def _score_multiple_authors(
+    author_str: str,
+    bio: str,
+    source_type: str,
+    domain: str,
+    author_profile: dict,
+    content: str,
+) -> Tuple[float, dict]:
+    """
+    Handle multiple authors — average credibility scores.
 
-    count = len([a for a in author.split(",") if a.strip()])
+    Assignment requirement:
+    "Multiple Authors → Use average credibility score"
 
-    if count >= 5:
-        score = 0.95
-    elif count >= 3:
-        score = 0.90
-    elif count >= 2:
-        score = 0.85
-    else:
-        score = 0.80
+    Also applies collaboration bonus when 2+ authors
+    have credentials (peer review signal).
+    """
+    CREDENTIAL_SUFFIXES = {
+        "md", "phd", "do", "rn", "np", "pa", "dds",
+        "mph", "psyd", "lcsw", "msw", "mba", "msc",
+        "bcpa", "facc", "facs",
+    }
 
-    return score, {"author_count": count, "source": "pubmed"}
+    # Smart split — handle "Marc B. Garnick, MD"
+    raw_parts = [p.strip() for p in author_str.split(",")]
+    authors   = []
+    i = 0
+    while i < len(raw_parts):
+        part = raw_parts[i].strip()
+        if (
+            i + 1 < len(raw_parts)
+            and raw_parts[i + 1].strip().lower().rstrip(".") in CREDENTIAL_SUFFIXES
+        ):
+            part = f"{part} {raw_parts[i + 1].strip()}"
+            i += 2
+        else:
+            i += 1
+        if part and len(part) > 2:
+            authors.append(part)
+
+    if not authors:
+        authors = [author_str]
+
+    print(f"[MULTI-AUTHOR] {len(authors)} authors: {authors}")
+
+    individual_scores = []
+    all_credentials   = []
+    tier              = _get_source_tier(domain)
+
+    for author in authors:
+        if source_type == "pubmed":
+            score, sigs = _score_pubmed_author(author)
+        elif tier == "institutional":
+            score, sigs = _score_institutional_author(
+                author         = author,
+                bio            = bio,
+                domain         = domain,
+                author_profile = author_profile,
+                content        = content,
+            )
+        else:
+            score, sigs = _score_open_platform_author(
+                author        = author,
+                bio           = bio,
+                followers     = author_profile.get("followers", 0),
+                article_count = author_profile.get("article_count", 0),
+                content       = content,
+            )
+
+        individual_scores.append(score)
+        all_credentials.extend(sigs.get("credentials_found", []))
+        print(f"[MULTI-AUTHOR]   {author[:40]} → {score:.3f}")
+
+    # Average score
+    avg_score = round(sum(individual_scores) / len(individual_scores), 3)
+
+    # Collaboration bonus (2+ credentialed authors)
+    credentialed_count = sum(1 for s in individual_scores if s >= 0.60)
+    if credentialed_count >= 2:
+        collab_bonus = min(credentialed_count * 0.02, 0.06)
+        avg_score    = round(min(1.0, avg_score + collab_bonus), 3)
+        print(
+            f"[MULTI-AUTHOR] Collaboration bonus +{collab_bonus:.2f} "
+            f"({credentialed_count} credentialed authors)"
+        )
+
+    print(
+        f"[MULTI-AUTHOR] Scores: {[round(s,3) for s in individual_scores]} "
+        f"→ Average: {avg_score:.3f}"
+    )
+
+    signals = {
+        "author_name":          author_str,
+        "author_count":         len(authors),
+        "individual_scores":    individual_scores,
+        "average_score":        avg_score,
+        "credentials_found":    list(dict.fromkeys(all_credentials)),
+        "credentialed_authors": credentialed_count,
+        "tier":                 tier,
+    }
+
+    return avg_score, signals
+
+
+def score_author_credibility(
+    author: str,
+    bio: str = "",
+    followers: int = 0,
+    article_count: int = 0,
+    source_type: str = "blog",
+    content: str = "",
+    domain: str = "",
+    author_profile: dict = None,
+) -> Tuple[float, dict]:
+    """
+    Score author credibility.
+
+    Routes to:
+    - _score_multiple_authors()    if comma-separated names
+    - _score_pubmed_author()       if source_type == pubmed
+    - _score_institutional_author() if institutional domain
+    - _score_open_platform_author() otherwise
+    """
+    author_profile = author_profile or {}
+    domain         = domain.lower().replace("www.", "")
+
+    if not author or author.strip() in ("", "Unknown Author"):
+        return 0.10, {"reason": "no author", "tier": "unknown"}
+
+    # ── Detect multiple authors ────────────────────────────
+    parts = [p.strip() for p in author.split(",") if p.strip()]
+    CRED_SUFFIXES = {
+        "md", "phd", "do", "rn", "np", "pa", "dds",
+        "mph", "psyd", "lcsw", "msw", "mba", "msc",
+        "bcpa", "facc", "facs",
+    }
+    has_multiple = (
+        len(parts) >= 2
+        and not all(
+            p.lower().rstrip(".") in CRED_SUFFIXES
+            for p in parts[1:]
+        )
+        and len([
+            p for p in parts
+            if p.lower().rstrip(".") not in CRED_SUFFIXES
+            and len(p) > 3
+        ]) >= 2
+    )
+
+    if has_multiple:
+        print(f"[AUTHOR] Multiple authors: '{author[:60]}'")
+        return _score_multiple_authors(
+            author_str     = author,
+            bio            = bio,
+            source_type    = source_type,
+            domain         = domain,
+            author_profile = author_profile,
+            content        = content,
+        )
+
+    # ── PubMed ─────────────────────────────────────────────
+    if source_type == "pubmed":
+        return _score_pubmed_author(author)
+
+    # ── Institutional ──────────────────────────────────────
+    tier = _get_source_tier(domain)
+    if tier == "institutional":
+        return _score_institutional_author(
+            author         = author,
+            bio            = bio,
+            domain         = domain,
+            author_profile = author_profile,
+            content        = content,
+        )
+
+    # ── Open Platform ──────────────────────────────────────
+    return _score_open_platform_author(
+        author        = author,
+        bio           = bio,
+        followers     = followers,
+        article_count = article_count,
+        content       = content,
+    )
 
 
 # ============================================================
@@ -348,94 +786,64 @@ def score_citation_count(
     citation_count: int = 0,
     clap_count: int = 0,
     source_type: str = "blog",
+    domain: str = "",
+    view_count: int = 0,
+    like_count: int = 0,
 ) -> float:
     """
-    Score citations (PubMed) or engagement (blogs).
+    Score citations (PubMed) or engagement (blogs/YouTube).
+
+    PubMed:      log10(citations + 1) / 2.0
+    Blog:        log10(claps + 1) / 4.0
+    YouTube:     combined view + like score
+    Institutional: neutral 0.60 (editorial quality implied)
     """
+    domain = domain.lower().replace("www.", "")
+    tier   = _get_source_tier(domain)
+
+    # PubMed — real citations
     if source_type == "pubmed":
         if citation_count == 0:
             return 0.20
-        return round(min(math.log10(citation_count + 1) / 2.0, 1.0), 3)
+        score = min(math.log10(citation_count + 1) / 2.0, 1.0)
+        return round(score, 3)
 
-    elif source_type == "blog":
-        if clap_count == 0:
-            return 0.10
-        # log10(10000) = 4 → 1.0
-        return round(min(math.log10(clap_count + 1) / 4.0, 1.0), 3)
+    # Institutional — editorial process implies quality
+    if tier == "institutional":
+        print(f"[CITATION] Institutional → neutral 0.60")
+        return 0.60
 
-    elif source_type == "youtube":
-        return 0.50
+    # YouTube — view count + like count combined
+    if source_type == "youtube":
+        view_score = 0.0
+        like_score = 0.0
 
-    return 0.20
+        if view_count > 0:
+            view_score = min(math.log10(view_count + 1) / 8.0, 1.0)
+        if like_count > 0:
+            like_score = min(math.log10(like_count + 1) / 6.0, 1.0)
+
+        combined = (view_score * 0.6) + (like_score * 0.4)
+        result   = round(min(combined, 1.0), 3)
+
+        print(
+            f"[CITATION] YouTube: "
+            f"views={view_count:,}({view_score:.3f}) "
+            f"likes={like_count:,}({like_score:.3f}) "
+            f"→ {result:.3f}"
+        )
+        return result
+
+    # Blog — clap count as engagement proxy
+    if clap_count == 0:
+        return 0.10
+    score = min(math.log10(clap_count + 1) / 4.0, 1.0)
+    return round(score, 3)
 
 
 # ============================================================
 # Variable 3 — Domain Authority
 # ============================================================
-
-# ============================================================
-# Domain Authority Constants
-# ============================================================
-
-DOMAIN_AUTHORITY = {
-    # Academic / Government — Tier 1 (no ceiling)
-    "pubmed.ncbi.nlm.nih.gov":  1.00,
-    "ncbi.nlm.nih.gov":         1.00,
-    "nih.gov":                  1.00,
-    "who.int":                  1.00,
-    "cdc.gov":                  1.00,
-    "nature.com":               1.00,
-    "science.org":              1.00,
-    "nejm.org":                 1.00,
-    "thelancet.com":            1.00,
-    "jamanetwork.com":          0.97,
-    "bmj.com":                  0.97,
-
-    # Reputable Health — Tier 2
-    "mayoclinic.org":           0.92,
-    "medicalnewstoday.com":     0.82,
-    "webmd.com":                0.80,
-    "healthline.com":           0.80,
-    "harvard.edu":              0.95,
-    "stanford.edu":             0.95,
-    "ox.ac.uk":                 0.93,
-
-    # Quality Tech / AI — Tier 3
-    "realpython.com":           0.75,
-    "machinelearningmastery.com": 0.72,
-    "towardsdatascience.com":   0.70,
-
-    # Open Platforms — Penalized Base + Credential Ceiling
-    "medium.com":               0.45,   # ← Penalized base (was 0.55)
-    "youtube.com":              0.52,   # ← Penalized base (was 0.65)
-    "substack.com":             0.42,   # Similar to Medium
-    "wordpress.com":            0.35,   # Lower — more anonymous
-    "blogger.com":              0.30,   # Lowest open platform
-}
-
-# Maximum score ANY Medium article can achieve
-# No matter how credentialed the author
-MEDIUM_CEILING  = 0.82
-YOUTUBE_CEILING = 0.78
-
-# Medium publications with editorial standards
-# These get a boost above base but still below ceiling
-MEDIUM_PUBLICATIONS = {
-    "towards data science":        0.72,
-    "towardsdatascience":          0.72,
-    "the startup":                 0.62,
-    "thestartup":                  0.62,
-    "better humans":               0.62,
-    "entrepreneurship handbook":   0.62,
-    "mind cafe":                   0.60,
-    "tincture":                    0.65,  # Medical publication
-    "elemental":                   0.65,  # Health publication
-    "personal growth":             0.57,
-    "lifestyle":                   0.55,
-    "careers":                     0.57,
-    "productivity":                0.60,
-}
-
 
 def score_domain_authority(
     domain: str,
@@ -444,39 +852,20 @@ def score_domain_authority(
     author_score: float = 0.0,
 ) -> float:
     """
-    Score domain authority with platform-aware penalties.
+    Score domain authority.
 
-    Open Platform Logic:
-      Medium base = 0.45 (penalized — no editorial oversight)
-      Boosts available from:
-        → Author credibility (max +0.20)
-        → Known publication (max +0.15)
-      Hard ceiling = 0.82 (open platform tax always applies)
-
-      This means:
-        → Random Medium author: 0.45
-        → Medium author with PhD: 0.45 + 0.20 = 0.65
-        → PhD author in Tincture: 0.45 + 0.20 + 0.10 = 0.75
-        → Best possible Medium: 0.82 (ceiling)
-        → Compare: MayoClinic = 0.92 (no ceiling)
-        → Gap = 0.10 minimum "open platform tax"
-
-    Args:
-        domain:       Clean domain string
-        content:      Article text (for publication detection)
-        source_type:  blog / youtube / pubmed
-        author_score: Author credibility score (for boost calc)
-
-    Returns:
-        Float in [0.0, 1.0]
+    Institutional: hardcoded tier score
+    Medium:        base 0.45 + author boost, ceiling 0.82
+    YouTube:       base 0.52 + channel boost, ceiling 0.78
+    Unknown:       0.38 base
     """
     domain = domain.lower().replace("www.", "")
 
-    # ── PubMed always 1.0 ─────────────────────────────────
+    # PubMed / NCBI
     if "ncbi.nlm.nih.gov" in domain or "pubmed" in domain:
         return 1.00
 
-    # ── Academic domains ───────────────────────────────────
+    # Academic domains
     if domain.endswith(".edu"):
         return 0.88
     if ".ac." in domain:
@@ -484,163 +873,73 @@ def score_domain_authority(
     if domain.endswith(".gov"):
         return 0.90
 
-    # ── Direct known domain lookup ─────────────────────────
     base_score = DOMAIN_AUTHORITY.get(domain, 0.38)
 
-    # ── Medium: penalized base + author boost + ceiling ───
+    # Medium — boosted by author, capped at ceiling
     if domain == "medium.com":
-        return _score_medium_domain(
-            base_score  = base_score,   # 0.45
-            content     = content,
-            author_score= author_score,
-        )
+        boost = 0.0
+        if author_score >= 0.85:
+            boost += 0.20
+            print(f"[DOMAIN] Medium author boost +0.20")
+        elif author_score >= 0.70:
+            boost += 0.12
+            print(f"[DOMAIN] Medium author boost +0.12")
+        elif author_score >= 0.55:
+            boost += 0.06
+            print(f"[DOMAIN] Medium author boost +0.06")
 
-    # ── YouTube: penalized base + channel boost + ceiling ─
+        # Known publication boost
+        if content:
+            pub_boost = _detect_medium_publication(content)
+            if pub_boost > 0:
+                boost += pub_boost
+
+        raw   = base_score + boost
+        final = round(min(raw, MEDIUM_CEILING), 3)
+        print(
+            f"[DOMAIN] Medium: base={base_score} "
+            f"+ boost={boost:.2f} = {raw:.3f} "
+            f"→ capped at {final}"
+        )
+        return final
+
+    # YouTube — boosted by channel, capped at ceiling
     if domain == "youtube.com":
-        return _score_youtube_domain(
-            base_score   = base_score,  # 0.52
-            author_score = author_score,
+        boost = 0.0
+        if author_score >= 0.85:   boost += 0.18
+        elif author_score >= 0.70: boost += 0.10
+        elif author_score >= 0.55: boost += 0.05
+
+        raw   = base_score + boost
+        final = round(min(raw, YOUTUBE_CEILING), 3)
+        print(
+            f"[DOMAIN] YouTube: base={base_score} "
+            f"+ boost={boost:.2f} = {raw:.3f} "
+            f"→ capped at {final}"
         )
+        return final
 
-    # ── Substack / WordPress / Blogger ────────────────────
+    # Substack / WordPress / Blogger
     if domain in ("substack.com", "wordpress.com", "blogger.com"):
-        # Author boost possible but smaller ceiling
-        if author_score >= 0.80:
-            boosted = base_score + 0.15
-        elif author_score >= 0.60:
-            boosted = base_score + 0.08
-        else:
-            boosted = base_score
-        return round(min(boosted, 0.70), 3)
-
-    # ── Unknown domain ─────────────────────────────────────
-    if base_score == 0.38:
-        print(f"[DOMAIN] Unknown domain: {domain} → base 0.38")
+        if author_score >= 0.80:   boost = 0.15
+        elif author_score >= 0.60: boost = 0.08
+        else:                       boost = 0.0
+        return round(min(base_score + boost, 0.70), 3)
 
     return round(base_score, 3)
 
 
-def _score_medium_domain(
-    base_score: float,
-    content: str,
-    author_score: float,
-) -> float:
-    """
-    Medium domain scoring with explicit penalty structure.
-
-    Penalty logic:
-      Base 0.45 = penalized (open platform, no editorial board)
-      Boost 1: Author credentials → up to +0.20
-      Boost 2: Known publication → up to +0.15
-      Boost 3: High engagement proxy → up to +0.05
-      Ceiling: 0.82 = open platform tax always applies
-
-    Why 0.82 ceiling?
-      The best Medium article can still only be:
-        "A credentialed person writing on an open platform"
-      It can never be:
-        "An institutionally reviewed, editorially vetted source"
-      That 0.18 gap (from 1.0) is the "open platform tax"
-    """
-    boost = 0.0
-
-    # Boost 1: Author credibility
-    if author_score >= 0.85:
-        boost += 0.20
-        print(f"[DOMAIN] Medium: author boost +0.20 (score={author_score:.2f})")
-    elif author_score >= 0.70:
-        boost += 0.12
-        print(f"[DOMAIN] Medium: author boost +0.12 (score={author_score:.2f})")
-    elif author_score >= 0.55:
-        boost += 0.06
-        print(f"[DOMAIN] Medium: author boost +0.06 (score={author_score:.2f})")
-    else:
-        print(f"[DOMAIN] Medium: no author boost (score={author_score:.2f})")
-
-    # Boost 2: Known publication
-    if content:
-        pub_boost = _detect_medium_publication(content)
-        if pub_boost > 0:
-            boost += pub_boost
-            print(f"[DOMAIN] Medium: publication boost +{pub_boost:.2f}")
-
-    raw_score = base_score + boost
-    final     = round(min(raw_score, MEDIUM_CEILING), 3)
-
-    print(
-        f"[DOMAIN] Medium: base={base_score} + boost={boost:.2f} "
-        f"= {raw_score:.3f} → capped at {final} "
-        f"(ceiling={MEDIUM_CEILING})"
-    )
-
-    return final
-
-
-def _score_youtube_domain(
-    base_score: float,
-    author_score: float,
-) -> float:
-    """
-    YouTube domain scoring with penalty structure.
-
-    Base 0.52: Open platform (higher than Medium because
-    video format has some natural quality filter — harder to
-    produce than a blog post, but still no editorial review).
-
-    Ceiling 0.78: Lower than Medium ceiling because:
-    → No citations possible in video format
-    → Harder to verify claims
-    → Transcripts may be auto-generated
-    """
-    boost = 0.0
-
-    if author_score >= 0.85:
-        boost += 0.18
-    elif author_score >= 0.70:
-        boost += 0.10
-    elif author_score >= 0.55:
-        boost += 0.05
-
-    raw   = base_score + boost
-    final = round(min(raw, YOUTUBE_CEILING), 3)
-
-    print(
-        f"[DOMAIN] YouTube: base={base_score} + boost={boost:.2f} "
-        f"= {raw:.3f} → capped at {final} "
-        f"(ceiling={YOUTUBE_CEILING})"
-    )
-
-    return final
-
-
-def _detect_medium_publication(content: str) -> float:
-    """
-    Detect known Medium publication in content.
-    Returns boost amount (above base), not the final score.
-    """
-    content_lower = content.lower()
-    best_boost = 0.0
-
-    for pub_name, pub_score in MEDIUM_PUBLICATIONS.items():
-        if pub_name in content_lower:
-            boost = pub_score - 0.45  # Boost above Medium base
-            if boost > best_boost:
-                best_boost = boost
-                print(f"[DOMAIN] Medium publication: '{pub_name}' → boost +{boost:.2f}")
-
-    return round(best_boost, 3)
-
 def _detect_medium_publication(content: str) -> float:
     """Detect known Medium publication → return authority boost."""
     content_lower = content.lower()
-    best = 0.0
-    for pub_name, score in MEDIUM_PUBLICATIONS.items():
+    best_boost    = 0.0
+    for pub_name, pub_score in MEDIUM_PUBLICATIONS.items():
         if pub_name in content_lower:
-            boost = score - 0.55  # Boost above medium base
-            if boost > best:
-                best = boost
-            print(f"[DOMAIN] Publication '{pub_name}' detected → score {score}")
-    return round(best, 3)
+            boost = pub_score - 0.45
+            if boost > best_boost:
+                best_boost = boost
+                print(f"[DOMAIN] Publication '{pub_name}' → boost +{boost:.2f}")
+    return round(best_boost, 3)
 
 
 # ============================================================
@@ -649,8 +948,17 @@ def _detect_medium_publication(content: str) -> float:
 
 def score_recency(published_date: str) -> float:
     """
-    Score based on age from today.
-    Unknown date → mild penalty (0.4)
+    Score content recency by age from today.
+
+    Thresholds:
+      0-90 days    → 1.00
+      91-180 days  → 0.90
+      181-365 days → 0.80
+      1-2 years    → 0.60
+      2-3 years    → 0.40
+      3-5 years    → 0.25
+      5+ years     → 0.10
+      Unknown      → 0.40 (mild penalty)
     """
     if not published_date or published_date in ("Unknown", ""):
         return 0.40
@@ -662,7 +970,7 @@ def score_recency(published_date: str) -> float:
     except Exception:
         return 0.40
 
-    if age < 0:      return 0.50  # Future date = parsing error
+    if age < 0:      return 0.50   # Future date = parsing error
     if age <= 90:    return 1.00
     if age <= 180:   return 0.90
     if age <= 365:   return 0.80
@@ -676,119 +984,79 @@ def score_recency(published_date: str) -> float:
 # Variable 5 — Medical Disclaimer
 # ============================================================
 
-MEDICAL_ADVICE_SIGNALS = [
-    "you should take", "you should use", "recommended dose",
-    "take this medication", "treatment for", "cure for",
-    "remedy for", "how to treat", "helps treat",
-    "proven to cure", "clinically proven",
-    "supplement", "dosage", "side effects",
-]
-
-PERSONAL_ESSAY_SIGNALS = [
-    "in my experience", "i remember", "i learned",
-    "my story", "personal journey", "when i was",
-    "i decided", "i felt", "i noticed",
-    "from my perspective", "i believe", "in my opinion",
-]
-
-MEDICAL_TOPIC_SIGNALS = [
-    "health", "medical", "disease", "treatment",
-    "diagnosis", "drug", "medication", "therapy",
-    "clinical", "symptom", "nutrition", "diet",
-    "mental health", "depression", "anxiety",
-    "cancer", "diabetes", "obesity", "vaccine",
-    "supplement", "exercise", "fitness", "wellness",
-    "nervous system", "brain", "psychology",
-    "neuroscience", "cognitive", "behavior",
-]
-
-DISCLAIMER_PHRASES = [
-    "consult a doctor", "consult your physician",
-    "not a substitute", "healthcare professional",
-    "seek medical attention", "talk to your doctor",
-    "not medical advice", "for informational purposes only",
-    "always consult", "speak with a qualified",
-    "not intended to diagnose", "medical professional",
-    "before starting any", "consult with a",
-    "professional medical advice",
-]
-
-
 def score_medical_disclaimer(
     content: str,
     topic_tags: list,
     has_disclaimer: bool = False,
-) -> tuple:
+    domain: str = "",
+) -> Tuple[float, bool]:
     """
     Score medical disclaimer presence.
 
-    Key fix: Distinguish between types of medical content.
+    Institutional sources:
+      → Implied disclaimer 0.85 (editorial standards)
+      → Explicit disclaimer 1.00
 
-    Types:
-      1. Personal essay / experience piece
-         → Author shares their story
-         → Disclaimer less critical (0.5 neutral)
-         → Even without disclaimer
-
-      2. Medical advice article
-         → "Take X for Y condition"
-         → "Here is how to treat Z"
-         → Disclaimer CRITICAL
-         → Without disclaimer → 0.0
-
-      3. Non-medical content
-         → Tech, career, lifestyle
-         → Disclaimer not applicable → 0.5 neutral
+    Open platforms:
+      → Non-medical content → 0.50 (neutral)
+      → Medical + disclaimer → 1.00
+      → Medical + direct advice + no disclaimer → 0.00
+      → Medical + personal essay → 0.40
+      → Medical + no disclaimer → 0.20
 
     Returns:
         (score: float, is_medical: bool)
     """
+    domain = domain.lower().replace("www.", "")
+    tier   = _get_source_tier(domain)
+
+    if tier == "institutional":
+        content_lower = content.lower()
+        has_explicit  = has_disclaimer or any(
+            p in content_lower for p in DISCLAIMER_PHRASES
+        )
+        score = 1.0 if has_explicit else 0.85
+        print(
+            f"[DISCLAIMER] Institutional → "
+            f"{'explicit' if has_explicit else 'implied'}: {score}"
+        )
+        return score, True
+
+    # Open platform
     content_lower = content.lower()
     tags_lower    = " ".join(topic_tags).lower()
     combined      = f"{content_lower} {tags_lower}"
 
-    # Check for disclaimer first
-    has_disclaimer_content = has_disclaimer or any(
-        phrase in content_lower
-        for phrase in DISCLAIMER_PHRASES
+    has_explicit = has_disclaimer or any(
+        p in content_lower for p in DISCLAIMER_PHRASES
     )
 
-    # Is this medical topic at all?
-    medical_signal_count = sum(
-        1 for signal in MEDICAL_TOPIC_SIGNALS
-        if signal in combined
+    medical_count = sum(
+        1 for s in MEDICAL_TOPIC_SIGNALS if s in combined
     )
-    is_medical = medical_signal_count >= 2
+    is_medical = medical_count >= 2
 
     if not is_medical:
-        return 0.50, False   # Not applicable → neutral
+        return 0.50, False
 
-    # Is this a personal essay? (less strict)
-    personal_essay_count = sum(
-        1 for signal in PERSONAL_ESSAY_SIGNALS
-        if signal in content_lower
-    )
-    is_personal_essay = personal_essay_count >= 3
-
-    # Is this direct medical advice? (most strict)
-    advice_signal_count = sum(
-        1 for signal in MEDICAL_ADVICE_SIGNALS
-        if signal in content_lower
-    )
-    is_medical_advice = advice_signal_count >= 2
-
-    if has_disclaimer_content:
+    if has_explicit:
         return 1.00, True
 
-    if is_medical_advice:
-        # Direct medical advice without disclaimer → strong penalty
-        return 0.00, True
+    personal_count = sum(
+        1 for s in PERSONAL_ESSAY_SIGNALS if s in content_lower
+    )
+    is_personal_essay = personal_count >= 3
 
+    advice_count = sum(
+        1 for s in MEDICAL_ADVICE_SIGNALS if s in content_lower
+    )
+    is_medical_advice = advice_count >= 2
+
+    if is_medical_advice:
+        return 0.00, True
     if is_personal_essay:
-        # Personal essay about medical topic → mild penalty
         return 0.40, True
 
-    # Medical content, no advice, no essay signal → moderate penalty
     return 0.20, True
 
 
@@ -801,15 +1069,18 @@ def compute_abuse_multiplier(
     content: str,
     domain: str,
     topic_tags: list,
+    source_type: str = "blog",
     metadata: dict = None,
-) -> tuple:
+) -> Tuple[float, list]:
     """
-    Enhanced abuse detection covering ALL assignment requirements:
+    Detect manipulation / spam signals.
 
-    1. Fake Authors → Cross-check name patterns
-    2. SEO Spam    → Low authority + keyword stuffing
-    3. Misleading Medical → No disclaimer + medical claims
-    4. Outdated Info → Strong recency penalty (already in recency score)
+    Checks:
+      1. Fake authors (gibberish, bots, unverifiable claims)
+      2. SEO spam (keyword stuffing, thin content, bad domain)
+      3. Misleading medical content (claims without disclaimer)
+      4. Outdated info (handled by recency score, flagged here)
+      5. YouTube no transcript (content quality signal)
 
     Returns:
         (multiplier: float [0.3-1.0], issues: list[str])
@@ -818,15 +1089,11 @@ def compute_abuse_multiplier(
     issues     = []
     metadata   = metadata or {}
 
-    # ══════════════════════════════════════════════════════
-    # CHECK 1: FAKE AUTHORS
-    # Cross-check author names with known patterns
-    # ══════════════════════════════════════════════════════
-
+    # ── Check 1: Fake Authors ─────────────────────────────
     if author and author not in ("Unknown Author", ""):
         author_lower = author.lower()
 
-        # Gibberish: low vowel ratio
+        # Gibberish name (low vowel ratio)
         letters = [c for c in author_lower if c.isalpha()]
         if letters:
             vowel_ratio = sum(
@@ -835,177 +1102,173 @@ def compute_abuse_multiplier(
             if vowel_ratio < 0.10:
                 multiplier -= 0.25
                 issues.append(
-                    "FAKE AUTHOR: Name appears to be gibberish "
-                    f"(vowel ratio: {vowel_ratio:.2f})"
+                    f"FAKE AUTHOR: Gibberish name "
+                    f"(vowel ratio {vowel_ratio:.2f})"
                 )
 
-        # Numbers in name (bot pattern)
+        # Numbers in name
         if re.search(r'\d{3,}', author):
             multiplier -= 0.20
             issues.append("FAKE AUTHOR: Suspicious numbers in name")
 
-        # Very short name (single character)
+        # Too short
         if len(author.strip()) < 3:
             multiplier -= 0.20
             issues.append("FAKE AUTHOR: Name too short")
 
-        # All caps (spam signal)
+        # All caps
         if author.isupper() and len(author) > 4:
             multiplier -= 0.10
-            issues.append("FAKE AUTHOR: Name is all caps")
+            issues.append("FAKE AUTHOR: All caps name")
 
-        # Known fake patterns
-        fake_patterns = [
+        # Bot patterns
+        bot_patterns = [
             r'^user\d+$', r'^admin\d*$', r'^test\d*$',
             r'^guest\d*$', r'^bot\d*$',
         ]
-        for pattern in fake_patterns:
+        for pattern in bot_patterns:
             if re.match(pattern, author_lower):
                 multiplier -= 0.30
-                issues.append(f"FAKE AUTHOR: Matches bot pattern '{pattern}'")
+                issues.append(
+                    f"FAKE AUTHOR: Matches bot pattern '{pattern}'"
+                )
                 break
 
-        # Cross-check: medical credential claimed but no bio
+        # Credential claimed but no bio (cannot verify)
         name_has_cred = any(
             re.search(r'\b' + re.escape(c) + r'\b', author_lower)
             for c in NAME_CREDENTIALS
         )
         author_profile = metadata.get("author_profile", {})
-        has_bio = bool(author_profile.get("bio", ""))
-
+        has_bio        = bool(author_profile.get("bio", ""))
         if name_has_cred and not has_bio:
-            # Credential in name but no supporting bio → suspicious
-            # Don't penalize heavily, just flag
             issues.append(
-                "AUTHOR NOTE: Credentials claimed in name but "
-                "no supporting bio found. Cannot fully verify."
+                "AUTHOR NOTE: Credentials in name but no bio found "
+                "— cannot fully verify"
             )
 
-    # ══════════════════════════════════════════════════════
-    # CHECK 2: SEO SPAM BLOGS
-    # Penalize domains with low authority + spam signals
-    # ══════════════════════════════════════════════════════
-
+    # ── Check 2: SEO Spam ─────────────────────────────────
     if content:
-        words = content.lower().split()
+        words       = content.lower().split()
         total_words = len(words)
 
         if total_words > 0:
-            # Keyword stuffing: any word > 5% of content
+            # Keyword stuffing
             word_freq = {}
             for w in words:
                 if len(w) > 4:
                     word_freq[w] = word_freq.get(w, 0) + 1
 
             for word, count in word_freq.items():
-                freq = count / total_words
-                if freq > 0.05:
+                if count / total_words > 0.05:
                     multiplier -= 0.15
                     issues.append(
-                        f"SEO SPAM: Keyword stuffing detected — "
-                        f"'{word}' appears {freq:.1%} of content"
+                        f"SEO SPAM: Keyword stuffing — "
+                        f"'{word}' = {count/total_words:.1%} of content"
                     )
                     break
 
-            # Very thin content on low-authority domain
-            da = DOMAIN_AUTHORITY.get(domain, 0.45)
-            if total_words < 200 and da < 0.60:
-                multiplier -= 0.15
-                issues.append(
-                    f"SEO SPAM: Thin content ({total_words} words) "
-                    f"on low-authority domain ({domain})"
-                )
+        # Thin content on low-authority domain
+        domain_clean = domain.lower().replace("www.", "")
+        da = DOMAIN_AUTHORITY.get(domain_clean, 0.38)
+        if total_words < 200 and da < 0.60:
+            multiplier -= 0.15
+            issues.append(
+                f"SEO SPAM: Thin content ({total_words} words) "
+                f"on low-authority domain"
+            )
 
-    # Domain spam patterns
-    SPAM_DOMAINS = [
-        r'\d{4,}',          # Numbers in domain
-        r'free.*money',     # Financial spam
-        r'click.*here',     # Clickbait
-        r'best.*review',    # Fake review sites
-    ]
+    # Spam domain patterns
     domain_lower = domain.lower()
-    for pattern in SPAM_DOMAINS:
+    SPAM_PATTERNS = [r'\d{4,}', r'free.*money', r'click.*here', r'best.*review']
+    for pattern in SPAM_PATTERNS:
         if re.search(pattern, domain_lower):
             multiplier -= 0.15
-            issues.append(f"SEO SPAM: Suspicious domain pattern: {domain}")
+            issues.append(f"SEO SPAM: Suspicious domain pattern")
             break
 
-    # YouTube-specific spam
+    # YouTube description spam
     desc_analysis = metadata.get("description_analysis", {})
-    spam_count = desc_analysis.get("spam_signals", 0)
-    if spam_count >= 3:
+    if desc_analysis.get("spam_signals", 0) >= 3:
         multiplier -= 0.15
         issues.append(
-            f"SEO SPAM: {spam_count} promotional phrases in description"
+            f"SEO SPAM: {desc_analysis['spam_signals']} "
+            f"promotional phrases in description"
         )
 
-    # ══════════════════════════════════════════════════════
-    # CHECK 3: MISLEADING MEDICAL CONTENT
-    # Medical claims without disclaimer = dangerous
-    # ══════════════════════════════════════════════════════
+    # ── Check 3: Misleading Medical Content ──────────────
+    content_lower = (content or "").lower()
 
-    MISINFORMATION_PHRASES = [
-        "doctors don't want you to know",
-        "big pharma doesn't want",
-        "miracle cure", "100% natural cure",
-        "guaranteed to cure", "secret remedy",
-        "they don't want you to know",
-        "proven to cure cancer",
-        "cures all diseases", "miracle drug",
-        "no side effects", "ancient secret",
-    ]
-
-    content_lower = content.lower() if content else ""
+    # Misinformation phrases
     for phrase in MISINFORMATION_PHRASES:
         if phrase in content_lower:
             multiplier -= 0.30
             issues.append(
-                f"MISLEADING MEDICAL: Misinformation signal: '{phrase}'"
+                f"MISLEADING MEDICAL: '{phrase}'"
             )
             break
 
-    # Medical claims + no disclaimer
+    # Medical advice + no disclaimer
     has_disclaimer = metadata.get("has_medical_disclaimer", False)
-    medical_advice_signals = [
-        "you should take", "recommended dose",
-        "take this medication", "helps treat",
-        "proven to cure", "clinically proven",
-    ]
-    has_medical_advice = any(
-        s in content_lower for s in medical_advice_signals
+    has_advice     = any(
+        s in content_lower for s in MEDICAL_ADVICE_SIGNALS
     )
-    if has_medical_advice and not has_disclaimer:
+    if has_advice and not has_disclaimer:
         multiplier -= 0.20
         issues.append(
-            "MISLEADING MEDICAL: Direct medical advice "
-            "without disclaimer"
+            "MISLEADING MEDICAL: Direct medical advice without disclaimer"
         )
 
-    # ══════════════════════════════════════════════════════
-    # CHECK 4: OUTDATED INFORMATION
-    # Already handled by recency_score variable
-    # But add extra flag for very old content making current claims
-    # ══════════════════════════════════════════════════════
+    # ── Check 4: Outdated Info ────────────────────────────
+    # Handled by recency score (0.10 for 5+ year old content)
+    # No additional multiplier to avoid double-penalty
 
-    # This is handled in score_recency() with strong penalties
-    # for 5+ year old content. No additional multiplier needed
-    # because it would double-penalize.
+    # ── Check 5: YouTube No Transcript ───────────────────
+    if source_type == "youtube":
+        transcript_source = metadata.get("transcript_source", "none")
+        has_transcript    = metadata.get("has_transcript", False)
+        view_count        = metadata.get("view_count", 0)
+
+        if transcript_source == "none" and not has_transcript:
+            multiplier -= 0.08
+            issues.append(
+                "NO TRANSCRIPT: Content analysis based on "
+                "description only — reduced confidence"
+            )
+
+            # Extra penalty for popular video with no captions
+            if view_count > 500_000:
+                multiplier -= 0.05
+                issues.append(
+                    f"NO TRANSCRIPT: Popular video ({view_count:,} views) "
+                    f"with no captions — possibly intentional"
+                )
 
     return max(0.30, round(multiplier, 2)), issues
 
+
 # ============================================================
-# Main Trust Score
+# Main Trust Score Function
 # ============================================================
 
 def compute_trust_score(article: dict) -> dict:
     """
     Compute trust score for a single scraped article.
 
+    Full pipeline:
+      1. Extract all signals from article dict
+      2. Route to correct author scorer by source type
+      3. Score all 5 variables
+      4. Apply weighted sum
+      5. Apply abuse multiplier
+      6. Generate AI explanation (Groq + prompt.txt)
+      7. Return complete breakdown dict
+
     Args:
-        article: Dict from scraper
+        article: Scraped article dict from any scraper
 
     Returns:
-        Dict with trust_score + full breakdown
+        Complete breakdown dict including ai_explanation
     """
     source_type = article.get("source_type", "blog")
     metadata    = article.get("metadata", {})
@@ -1013,45 +1276,63 @@ def compute_trust_score(article: dict) -> dict:
     topic_tags  = article.get("topic_tags", [])
     domain      = metadata.get("domain", "")
 
-    author      = article.get("author", "Unknown Author")
-    pub_date    = article.get("published_date", "Unknown")
-
-    # Blog-specific signals
+    author         = article.get("author", "Unknown Author")
+    pub_date       = article.get("published_date", "Unknown")
     author_profile = metadata.get("author_profile", {})
     bio            = author_profile.get("bio", "")
     followers      = author_profile.get("followers", 0)
     article_count  = author_profile.get("article_count", 0)
     clap_count     = metadata.get("clap_count", 0)
-
-    # PubMed-specific signals
     citation_count = metadata.get("citation_count", 0)
     has_disclaimer = metadata.get("has_medical_disclaimer", False)
 
+    # YouTube-specific signals
+    view_count       = metadata.get("view_count",          0)
+    like_count       = metadata.get("like_count",          0)
+    subscriber_count = metadata.get("subscriber_count",    0)
+    channel_desc     = metadata.get("channel_description", "")
+    total_videos     = metadata.get("channel_total_videos",0)
+
     print(f"\n{'='*55}")
     print(f"[TRUST] {article.get('title', '')[:50]}")
-    print(f"[TRUST] Author: {author}")
     print(f"[TRUST] Source: {source_type} | Domain: {domain}")
+    print(f"[TRUST] Tier  : {_get_source_tier(domain)}")
     print(f"{'='*55}")
 
     # ── Variable 1: Author Credibility ────────────────────
-    v1_author, author_signals = score_author_credibility(
-        author        = author,
-        bio           = bio,
-        followers     = followers,
-        article_count = article_count,
-        source_type   = source_type,
-        content       = content,
-    )
+    if source_type == "youtube":
+        v1_author, author_signals = _score_youtube_author(
+            channel_name        = author,
+            subscriber_count    = subscriber_count,
+            channel_description = channel_desc,
+            total_videos        = total_videos,
+            view_count          = view_count,
+            like_count          = like_count,
+            content             = content,
+        )
+    else:
+        v1_author, author_signals = score_author_credibility(
+            author         = author,
+            bio            = bio,
+            followers      = followers,
+            article_count  = article_count,
+            source_type    = source_type,
+            content        = content,
+            domain         = domain,
+            author_profile = author_profile,
+        )
 
     # ── Variable 2: Citation / Engagement ─────────────────
     v2_citation = score_citation_count(
         citation_count = citation_count,
         clap_count     = clap_count,
         source_type    = source_type,
+        domain         = domain,
+        view_count     = view_count,
+        like_count     = like_count,
     )
 
     # ── Variable 3: Domain Authority ──────────────────────
-    # Pass author score so credentialed authors boost domain
     v3_domain = score_domain_authority(
         domain       = domain,
         content      = content,
@@ -1067,6 +1348,7 @@ def compute_trust_score(article: dict) -> dict:
         content        = content,
         topic_tags     = topic_tags,
         has_disclaimer = has_disclaimer,
+        domain         = domain,
     )
 
     # ── Weighted Sum ──────────────────────────────────────
@@ -1080,19 +1362,20 @@ def compute_trust_score(article: dict) -> dict:
 
     # ── Abuse Multiplier ──────────────────────────────────
     abuse_multiplier, abuse_issues = compute_abuse_multiplier(
-        author     = author,
-        content    = content,
-        domain     = domain,
-        topic_tags = topic_tags,
+        author      = author,
+        content     = content,
+        domain      = domain,
+        topic_tags  = topic_tags,
+        source_type = source_type,
+        metadata    = metadata,
     )
 
     # ── Final Score ───────────────────────────────────────
     final_score = round(
-        max(0.0, min(1.0, weighted_sum * abuse_multiplier)),
-        3
+        max(0.0, min(1.0, weighted_sum * abuse_multiplier)), 3
     )
 
-    # ── Pretty Print ──────────────────────────────────────
+    # ── Print Breakdown ───────────────────────────────────
     print(f"\n[TRUST] Score Breakdown:")
     print(f"  author_credibility : {v1_author:.3f} × {WEIGHTS['author_credibility']} = {v1_author * WEIGHTS['author_credibility']:.4f}")
     print(f"  citation_count     : {v2_citation:.3f} × {WEIGHTS['citation_count']} = {v2_citation * WEIGHTS['citation_count']:.4f}")
@@ -1111,7 +1394,8 @@ def compute_trust_score(article: dict) -> dict:
     elif final_score >= 0.40: print("🟠 Low")
     else:                     print("🔴 Unreliable")
 
-    return {
+    # ── Build Breakdown Dict ──────────────────────────────
+    breakdown = {
         "author_credibility": {
             "score":        v1_author,
             "weight":       WEIGHTS["author_credibility"],
@@ -1125,6 +1409,9 @@ def compute_trust_score(article: dict) -> dict:
             "signals": {
                 "clap_count":      clap_count,
                 "citation_count":  citation_count,
+                "view_count":      view_count,
+                "like_count":      like_count,
+                "domain_tier":     _get_source_tier(domain),
             },
         },
         "domain_authority": {
@@ -1146,6 +1433,7 @@ def compute_trust_score(article: dict) -> dict:
             "signals": {
                 "has_disclaimer": has_disclaimer,
                 "is_medical":     is_medical,
+                "domain_tier":    _get_source_tier(domain),
             },
         },
         "abuse_detection": {
@@ -1156,22 +1444,82 @@ def compute_trust_score(article: dict) -> dict:
         "final_score":   final_score,
     }
 
+    # ── AI Explanation ────────────────────────────────────
+    print(f"\n[AI EXPLAIN] Generating explanation...")
+    try:
+        ai_explanation = generate_trust_explanation(
+            title       = article.get("title", "Unknown"),
+            author      = author,
+            domain      = domain,
+            source_type = source_type,
+            score       = final_score,
+            breakdown   = breakdown,
+        )
+    except Exception as e:
+        print(f"[AI EXPLAIN] ⚠ Failed: {e}")
+        ai_explanation = {
+            "summary":                f"Score: {final_score:.3f}",
+            "mathematical_breakdown": {},
+            "key_drivers":            [],
+            "improvement_suggestions":[],
+            "anomaly_flag":           False,
+            "anomaly_reason":         None,
+            "verification_questions": [],
+        }
+
+    breakdown["ai_explanation"] = ai_explanation
+
+    return breakdown
+
+
+# ============================================================
+# Batch Scorer
+# ============================================================
 
 def score_all(articles: list) -> list:
-    """Score all articles. Updates trust_score field in each."""
-    for article in articles:
+    """
+    Score all articles in a list.
+    Attaches trust_score, trust_score_breakdown,
+    and ai_explanation to each article dict.
+
+    Prints anomaly warnings for flagged articles.
+    """
+    total = len(articles)
+
+    for i, article in enumerate(articles, 1):
+        print(
+            f"\n[{i}/{total}] Scoring: "
+            f"{article.get('title', 'Unknown')[:50]}"
+        )
+
         breakdown = compute_trust_score(article)
+
         article["trust_score"]           = breakdown["final_score"]
         article["trust_score_breakdown"] = breakdown
+        article["ai_explanation"]        = breakdown.get("ai_explanation", {})
+
+        # Print anomaly warnings
+        explanation = article["ai_explanation"]
+        if explanation.get("anomaly_flag"):
+            print(f"\n{'⚠' * 20}")
+            print(f"  ANOMALY FLAGGED")
+            print(f"  Article : {article.get('title', '')[:60]}")
+            print(f"  Score   : {article['trust_score']:.3f}")
+            print(f"  Domain  : {article.get('metadata', {}).get('domain', '')}")
+            print(f"  Reason  : {explanation.get('anomaly_reason', '')}")
+            print(f"  Verify  :")
+            for q in explanation.get("verification_questions", [])[:3]:
+                print(f"    → {q}")
+            print(f"{'⚠' * 20}\n")
+
     return articles
 
 
 # ============================================================
-# Direct Runner
+# Direct Runner — Score Existing JSON Files
 # ============================================================
 
 if __name__ == "__main__":
-    import json
 
     output_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -1195,33 +1543,66 @@ if __name__ == "__main__":
         print(f"  Scoring: {fname}")
         print(f"{'='*55}")
 
-        with open(fpath) as f:
+        with open(fpath, encoding="utf-8") as f:
             articles = json.load(f)
 
         scored = score_all(articles)
         all_results.extend(scored)
 
-        with open(fpath, "w") as f:
+        with open(fpath, "w", encoding="utf-8") as f:
             json.dump(scored, f, indent=2, ensure_ascii=False)
 
         print(f"\n[SAVED] {fname} updated with trust scores")
 
-    # Summary
+    # ── Final Summary ──────────────────────────────────────
     print(f"\n{'='*70}")
     print(f"  TRUST SCORE SUMMARY")
     print(f"{'='*70}")
-    print(f"{'Title':<45} {'Type':<8} {'Score':>6}  Grade")
-    print(f"{'-'*70}")
+    print(
+        f"{'Title':<42} {'Type':<8} {'Score':>6}  "
+        f"{'Grade':<14} Flagged"
+    )
+    print(f"{'-'*75}")
 
+    flagged = []
     for a in all_results:
-        title  = (a.get("title") or "Unknown")[:44]
+        title  = (a.get("title") or "Unknown")[:41]
         stype  = a.get("source_type", "?")[:7]
         score  = a.get("trust_score", 0) or 0
+        expl   = a.get("ai_explanation", {})
+        flag   = expl.get("anomaly_flag", False)
 
         if score >= 0.80:   grade = "🟢 High Trust"
         elif score >= 0.60: grade = "🟡 Moderate"
         elif score >= 0.40: grade = "🟠 Low"
         else:               grade = "🔴 Unreliable"
 
-        print(f"{title:<45} {stype:<8} {score:>6.3f}  {grade}")
+        flag_str = "⚠ VERIFY" if flag else "✅ Clean"
+        print(
+            f"{title:<42} {stype:<8} {score:>6.3f}  "
+            f"{grade:<14} {flag_str}"
+        )
+
+        if flag:
+            flagged.append(a)
+
+    if flagged:
+        print(f"\n{'='*70}")
+        print(f"  ⚠ ARTICLES REQUIRING VERIFICATION ({len(flagged)})")
+        print(f"{'='*70}")
+        for a in flagged:
+            expl = a.get("ai_explanation", {})
+            print(f"\n  {a.get('title','')[:65]}")
+            print(f"  Score  : {a.get('trust_score', 0):.3f}")
+            print(f"  Reason : {expl.get('anomaly_reason','')[:80]}")
+            for q in expl.get("verification_questions", [])[:2]:
+                print(f"    → {q}")
+
+    scores = [a.get("trust_score", 0) or 0 for a in all_results]
+    if scores:
+        print(f"\n{'─'*50}")
+        print(f"  Total    : {len(scores)}")
+        print(f"  Average  : {sum(scores)/len(scores):.3f}")
+        print(f"  Highest  : {max(scores):.3f}")
+        print(f"  Lowest   : {min(scores):.3f}")
     print()

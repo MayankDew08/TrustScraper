@@ -44,6 +44,7 @@ EFETCH_URL  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 ELINK_URL   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"
 PMC_URL     = "https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
 PMC_OA_URL  = "https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi"
+PMC_OAI_URL = "https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi"
 
 
 # ============================================================

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_api_key: str = ""
     youtube_api_key: str = ""
+    supadata_api_key: str = ""
     ncbi_api_key: str = ""          # Optional, increases rate limit
 
     # ----------------------------
@@ -54,10 +55,14 @@ class Settings(BaseSettings):
     # ----------------------------
     # LLM Settings
     # ----------------------------
-    groq_model: str = "llama-3.1-70b-versatile"
+    groq_model: str = "llama-3.1-8b-instant"
     gemini_model: str = "gemini-1.5-flash"
     max_tokens: int = 1024
     temperature: float = 0.3        # Low = more factual responses
+
+    # Springer Nature API keys
+    springer_meta_api_key: str = ""
+    springer_oa_api_key: str = ""
 
     class Config:
         env_file = ".env"

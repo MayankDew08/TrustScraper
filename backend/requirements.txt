@@ -1,1 +1,76 @@
--r requirement.txt
+# ============================================================
+# PYTHON VERSION: 3.11.x
+# Install: pip install -r requirement.txt
+# ============================================================
+
+# ----------------------------
+# Web Scraping
+# ----------------------------
+requests==2.31.0                # HTTP requests
+beautifulsoup4==4.12.3          # HTML parsing
+lxml==5.2.1                     # Faster BS4 parser backend
+lxml_html_clean==0.4.3          # Required by newspaper3k with modern lxml
+newspaper3k==0.2.8              # Blog boilerplate removal
+playwright==1.44.0              # JS-rendered pages (fallback)
+
+# ----------------------------
+# YouTube
+# ----------------------------
+youtube-transcript-api==0.6.2   # Fetch transcripts
+google-api-python-client==2.128.0  # YouTube Data API v3
+
+# ----------------------------
+# PubMed
+# ----------------------------
+biopython==1.83                 # NCBI Entrez API wrapper
+
+# ----------------------------
+# NLP — Topic Tagging
+# ----------------------------
+keybert==0.8.4                  # Semantic keyword extraction
+sentence-transformers==3.0.1    # BERT embeddings for KeyBERT
+rake-nltk==1.0.6                # Fallback keyword extractor
+nltk==3.8.1                     # Tokenization, stopwords
+
+# ----------------------------
+# Language Detection
+# ----------------------------
+langdetect==1.0.9               # Detect content language
+
+# ----------------------------
+# LLM — Chatbot
+# ----------------------------
+groq==0.9.0                     # Groq API client (Llama 3.1)
+google-generativeai==0.7.2      # Gemini fallback
+langgraph==0.2.28
+langchain-core==0.3.15
+
+# ----------------------------
+# Backend API
+# ----------------------------
+fastapi==0.111.0                # API framework
+uvicorn[standard]==0.30.1       # ASGI server
+python-multipart==0.0.9         # Form data support
+pydantic==2.7.4                 # Data validation
+pydantic-settings==2.3.4        # Config management
+
+# ----------------------------
+# Utilities
+# ----------------------------
+python-dotenv==1.0.1            # Load .env file
+httpx==0.27.0                   # Async HTTP (FastAPI testing)
+tenacity==8.3.0                 # Retry logic for scrapers
+fake-useragent==1.5.1           # Rotate user agents
+tqdm==4.66.4                    # Progress bars
+
+# ----------------------------
+# Data Handling
+# ----------------------------
+pandas==2.2.2                   # Optional: tabular output
+python-dateutil==2.9.0          # Robust date parsing
+
+# ----------------------------
+# Dev Tools
+# ----------------------------
+black==24.4.2                   # Code formatter
+pytest==8.2.2                   # Testing
