@@ -97,7 +97,7 @@ LangGraph orchestrates parallel scraping
 
 ```
 backend/
-├── pipeline.py              # LangGraph orchestrator (entry point)
+├── main.py              # LangGraph orchestrator (entry point)
 ├── config.py                # Centralized config + API keys
 │
 ├── scraper/
@@ -622,7 +622,7 @@ JettyAI-Assessment/
 ├── README.md                        # This file
 │
 ├── backend/
-│   ├── pipeline.py                  # Entry point — run this
+│   ├── main.py                  # Entry point — run this
 │   ├── config.py                    # Centralized config
 │   ├── requirements.txt             # All Python dependencies
 │   ├── .env                         # API keys (not committed)
@@ -745,7 +745,7 @@ nltk.download('punkt_tab')
 
 ```bash
 cd backend
-python pipeline.py
+python main.py
 ```
 
 The interactive CLI will prompt for URLs.
@@ -937,8 +937,7 @@ required schema:
 ---
 
 ## Sample Output
-
-<!-- Replace with actual output after running pipeline -->
+	
 
 ```
 ======================================================================
